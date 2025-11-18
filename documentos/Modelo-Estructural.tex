@@ -1,0 +1,1594 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{tocloft}
+
+\setstretch{1.3}
+\captionsetup{font=small,skip=10pt}
+
+% Configuración de encabezados y pies
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\textbf{Modelado Estructural FIS 2025-III}}
+\lhead{\textit{Universidad Distrital Francisco José de Caldas}}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+
+% Espacios en tablas
+\renewcommand{\arraystretch}{1.5}
+
+% Formato mejorado de secciones
+
+
+\title{Modelado Estructural del Sistema FIS\\
+\Large Proyecto Semestral 2025-III}
+\author{Laura Sofía Culma Ospina (20231020163)\\
+Daniel Esteban Camacho Ospina (20231020046)\\
+\textbf{Profesor:} Henry Alberto Diosa}
+\date{\today}
+
+\begin{document}
+
+% ======================================
+% PÁGINA DE TÍTULO
+% ======================================
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    
+    {\LARGE \bfseries Universidad Distrital Francisco José de Caldas}
+    \vspace{0.3cm}
+    
+    {\LARGE Facultad de Ingeniería}
+    \vspace{0.3cm}
+    
+    {\large Ingeniería de Sistemas}
+    
+    \vspace{2.5cm}
+    
+    {\huge \bfseries Modelado Estructural}
+    \vspace{0.5cm}
+    
+    {\huge Proyecto Semestral 2025-III}
+    
+    \vspace{3cm}
+    
+    \begin{tabular}{c}
+        \Large \textbf{Autores:}\\[0.5cm]
+        Laura Sofía Culma Ospina\\
+        \textit{Cód. 20231020163}\\[0.5cm]
+        Daniel Esteban Camacho Ospina\\
+        \textit{Cód. 20231020046}
+    \end{tabular}
+    
+    \vspace{2.5cm}
+    
+    {\large \textbf{Profesor:} Henry Alberto Diosa}
+    
+    \vspace{3cm}
+    
+    {\large \today}
+\end{titlepage}
+
+\newpage
+\tableofcontents
+\newpage
+
+% ======================================
+% 6. DICCIONARIO DE CLASES
+% ======================================
+\section{Diccionario de Clases}
+
+\subsection*{Introducción}
+
+El diccionario de clases describe la estructura de las entidades del sistema, detallando sus atributos (visibilidad, tipo, multiplicidad y dominio) y métodos públicos.
+
+Los métodos se presentan en tablas que especifican su visibilidad, nombre, parámetros con tipo, tipo de retorno y descripción.
+
+Esta documentación forma parte de una arquitectura por capas que separa responsabilidades de forma clara:
+
+\begin{itemize}
+    \item \textbf{Capa de Presentación} --- Controladores que exponen la API REST mediante endpoints HTTP, reciben peticiones de clientes y retornan respuestas
+    \item \textbf{Capa de Servicios} --- Contiene la lógica de negocio, validaciones y orquestación de operaciones
+    \item \textbf{Capa de Persistencia} --- Repositorios que actúan como mapeadores externos (Data Mapper) entre el dominio y la base de datos
+    \item \textbf{Capa de Entidades} --- Representa el modelo de dominio con clases POJO puras, sin lógica de persistencia
+\end{itemize}
+
+Esta separación garantiza una estructura organizada, modular, desacoplada y fácil de mantener.
+
+\vspace{0.5cm}
+\subsection{Capa Entidades}
+\subsubsection{Clase: Usuario (Superclase Abstracta)}
+
+\textbf{Descripción:} Clase abstracta que agrupa los datos comunes de todos los usuarios del sistema. Sirve como punto de herencia para las demás clases de usuario.
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idUsuario & privado & UUID & 1 & Identificador único generado automáticamente(UUID), solo caracteres alfanuméricos\\
+\hline
+nombre & privado & String & 1 & Solo letras\\
+\hline
+apellido & privado & String & 1 & Solo letras\\
+\hline
+cedula & privado & String & 1 & Numérico, 6–10 caracteres, único\\
+\hline
+correoElectronico & privado & String & 1 & Formato de correo válido, único\\
+\hline
+fechaNacimiento & privado & String & 1 & Fecha en formato YYYY-MM-DD\\
+\hline
+tokenUsuario & privado & Token\_Usuario & 1 & Objeto de tipo \textit{Token\_Usuario} asociado al usuario\\
+\hline
+\end{longtable}
+
+\vspace{0.5cm}
+
+\subsubsection{Clase: Profesor (extiende Usuario)}
+
+\textbf{Descripción:} Clase que representa a los profesores dentro del sistema. Hereda de \texttt{Usuario} y contiene los datos específicos relacionados con la identificación y el grupo asignado a cada profesor.
+
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+grupoAsignado & privado & String & 1 & Solo letras, identifica el grupo asignado al profesor\\
+\hline
+idProfesor & privado & UUID & 1 & Identificador único del profesor generado automáticamente(UUID), solo caracteres alfanuméricos\\
+\hline
+\end{longtable}
+
+\vspace{0.5cm}
+
+\subsubsection{Clase: Director (extiende Usuario)}
+
+\textbf{Descripción:} Clase que representa a los directores dentro del sistema. Hereda de Usuario y contiene el identificador único correspondiente a cada director registrado.
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idDirector & privado & UUID & 1 & Identificador único del director generado automáticamente (UUID), solo caracteres alfanuméricos\\
+\hline
+\end{longtable}
+
+
+
+\vspace{0.5cm}
+
+\subsubsection{Clase: Acudiente (extiende Usuario)}
+
+\textbf{Descripción:}Clase que representa a los acudientes dentro del sistema. Hereda de \texttt{Usuario} y mantiene la información de su estado y los estudiantes bajo su responsabilidad.
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idAcudiente & privado & UUID & 1 & Identificador único del acudiente generado automáticamente (UUID), solo caracteres alfanuméricos\\
+\hline
+estado & privado & boolean & 1 & true (admitido), false (aspirante)\\
+\hline
+estudiantesACargo & privado & ArrayList & * & Lista de estudiantes asociados al acudiente\\
+\hline
+\end{longtable}
+
+
+
+\vspace{0.5cm}
+
+\subsubsection{Clase: Coordinador (extiende Usuario)}
+
+\textbf{Descripción:}Clase que representa al coordinador académico dentro del sistema. Hereda de \texttt{Usuario} e identifica de forma única a cada coordinador.
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idCoordinador & privado & UUID & 1 & Identificador único del coordinador generado automáticamente (UUID), solo caracteres alfanuméricos\\
+\hline
+\end{longtable}
+
+
+\vspace{0.5cm}
+
+\subsubsection{Clase: Administrador (extiende Usuario)}
+
+\textbf{Descripción:} Clase que representa al administrador del sistema. Hereda de \texttt{Usuario} y gestiona la creación de usuarios y contraseñas.
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idAdministrador & privado & UUID & 1 & Identificador único del administrador generado automáticamente (UUID), solo caracteres alfanuméricos\\
+\hline
+\end{longtable}
+
+
+\vspace{0.5cm}
+\subsubsection{Clase: Estudiante}
+
+\textbf{Descripción:} Clase que almacena la información de un estudiante, incluyendo sus datos personales, grupo asignado, boletines y hoja de vida académica.
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idEstudiante & privado & UUID & 1 & Identificador único del grupo generado automáticamente (UUID), solo caracteres alfanuméricos\\
+\hline
+nombre & privado & String & 1 & Solo letras, sin números ni símbolos\\
+\hline
+apellido & privado & String & 1 & Solo letras, sin números ni símbolos\\
+\hline
+numeroDocumento & privado & String & 1 & Solo dígitos numéricos, sin espacios ni letras\\
+\hline
+estado & privado & boolean & 1 & Valores permitidos: \texttt{true} (activo) o \texttt{false} (inactivo)\\
+\hline
+acudiente & privado & Acudiente & 1 & Objeto de tipo \texttt{Acudiente} asociado al estudiante\\
+\hline
+grupoAsignado & privado & Grupo & 1 & Objeto de tipo \texttt{Grupo} al que pertenece el estudiante\\
+\hline
+hojaDeVida & privado & HojaDeVidaEstudiante & 1 & Objeto de tipo \texttt{HojaDeVidaEstudiante} con datos médicos y observaciones\\
+\hline
+boletines & privado & ArrayList & 0..* & Lista de objetos \texttt{Boletin} correspondientes al historial académico del estudiante\\
+\hline
+\end{longtable}
+
+
+\subsubsection{Clase: Grupo}
+
+\textbf{Descripción:} Clase que representa un grupo académico dentro de la institución. Contiene su identificador, nombre, grado, lista de estudiantes y el profesor asignado como director de grupo.
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idGrupo & privado & UUID & 1 & Identificador único del grupo generado automáticamente (UUID), solo caracteres alfanuméricos\\
+\hline
+nombreGrupo & privado & String & 1 & Solo letras, sin caracteres especiales\\
+\hline
+grado & privado & Grado & 1 & Objeto de tipo \texttt{Grado} asociado al grupo\\
+\hline
+directorDeGrupo & privado & Profesor & 1 & Objeto de tipo \texttt{Profesor} asignado como director de grupo\\
+\hline
+estudiantes & privado & ArrayList & 0..* & Lista de objetos \texttt{Estudiante} pertenecientes al grupo\\
+\hline
+\end{longtable}
+
+\vspace{0.5cm}
+
+\subsubsection{Clase: Logro}
+
+\textbf{Descripción:} Clase que representa un indicador específico de evaluación dentro de una dimensión del desarrollo infantil. 
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idLogro & privado & UUID & 1 & Identificador único del indicador generado automáticamente (UUID), solo caracteres alfanuméricos\\
+\hline
+descripcion & privado & String & 1 & Texto descriptivo del criterio de evaluación, describe una competencia específica observable y evaluable de forma booleana\\
+\hline
+\end{longtable}
+
+\vspace{0.5cm}
+
+\subsubsection{Clase: CategoriaLogro}
+
+\textbf{Descripción:} Clase que representa una dimensión de evaluación del desarrollo infantil. El sistema maneja 4 dimensiones fundamentales: Psicosocial, Psicomotor, Cognitivo y Procedimental. 
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idCategoria & privado & UUID & 1 & Identificador único de la dimensión generado automáticamente (UUID), solo caracteres alfanuméricos\\
+\hline
+nombre & privado & String & 1 & Valores: "Psicosocial", "Psicomotor", "Cognitivo", "Procedimental"\\
+\hline
+logros & privado & List<Logro> & 0..* & Lista de indicadores de tipo \texttt{Logro} asociados a la dimensión (0 o más)\\
+\hline
+\end{longtable}
+
+\vspace{0.5cm}
+
+\subsubsection{Clase: EvaluacionCategoriaLogro}
+
+\textbf{Descripción:} Clase que registra la evaluación de una dimensión (categoría de indicadores) durante un periodo académico. Almacena el conjunto de evaluaciones booleanas de los indicadores que componen la dimensión, junto con la puntuación calculada automáticamente. La puntuación se calcula como: (indicadores cumplidos / total indicadores) × 100. Contiene la dimensión evaluada, los estados de los indicadores (cumplido/no cumplido), la puntuación resultante, la fecha de evaluación y el periodo académico correspondiente.
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idEvaluacion & privado & UUID & 1 & Identificador único de la evaluación generado automáticamente (UUID), solo caracteres alfanuméricos\\
+\hline
+calificacionLogro & privado & String & 1 & Puntuación calculada (0-100) basada en indicadores cumplidos: (cumplidos / total) × 100\\
+\hline
+categoriaLogro & privado & CategoriaLogro & 1 & Objeto de tipo \texttt{CategoriaLogro} que representa la dimensión evaluada (Psicosocial, Psicomotor, Cognitivo o Procedimental)\\
+\hline
+fechaEvaluacion & privado & Date & 1 & Fecha en formato \texttt{YYYY-MM-DD}\\
+\hline
+periodo & privado & PeriodoAcademico & 1 & Objeto de tipo \texttt{PeriodoAcademico} correspondiente a la evaluación\\
+\hline
+\end{longtable}
+
+\vspace{0.5cm}
+\subsubsection{Clase: HojaDeVidaEstudiante}
+
+\textbf{Descripción:} Clase que almacena la información complementaria del estudiante, incluyendo detalles médicos y observaciones relacionadas con su aprendizaje.
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+detallesMedicos & privado & String & 1 & Texto libre con información médica relevante del estudiante (por ejemplo: alergias, medicamentos, condiciones especiales)\\
+\hline
+idHojaDeVida & privado & UUID & 1 & Identificador único alfanumérico generado automáticamente (UUID)\\
+\hline
+observacionesAprendizaje & privado & String & 1 & Texto descriptivo del logro, solo letras y signos de puntuación válidos\\
+\hline
+\end{longtable}
+
+
+\vspace{0.5cm}
+
+\subsubsection{Clase: Boletin}
+
+\textbf{Descripción:} Clase que registra el boletín académico del estudiante, con las categorías evaluadas y el periodo correspondiente.
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idBoletin & privado & UUID & 1 & Identificador único
+alfanumérico generado automáticamente (UUID)\\
+\hline
+listaCategoriasEvaluadas & privado & ArrayList & 0..* & Lista de objetos de tipo \texttt{CategoriaLogro} con las evaluaciones correspondientes\\
+\hline
+periodo & privado & PeriodoAcademico & 1 & Objeto de tipo \texttt{PeriodoAcademico} al que pertenece el boletín\\
+\hline
+\end{longtable}
+\vspace{0.5cm}
+\subsubsection{Clase: PeriodoAcademico}
+
+\textbf{Descripción:} Clase que representa un periodo académico, definido por una fecha de inicio, una fecha de finalización y un identificador único.
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+fechaInicio & privado & Date & 1 & Fecha de inicio del periodo en formato \texttt{YYYY-MM-DD}\\
+\hline
+fechaFin & privado & Date & 1 & Fecha de finalización del periodo en formato \texttt{YYYY-MM-DD}\\
+\hline
+idPeriodoAcademico & privado & UUID & 1 &Identificador único
+alfanumérico generado automáticamente (UUID)\\
+\hline
+\end{longtable}
+
+\subsubsection{Enumeración: Rol}
+
+\begin{longtable}{|c|p{6cm}|}
+\hline
+\textbf{Valor} & \textbf{Descripción} \\
+\hline
+\endhead
+\hline
+\endfoot
+Coordinador & Usuario encargado del proceso de admisión de estudiantes y de coordinar actividades académicas. \\
+\hline
+Profesor & Usuario responsable de impartir clases y evaluar el desempeño académico de los estudiantes. \\
+\hline
+Acudiente & Usuario que actúa como responsable legal o tutor de un estudiante. \\
+\hline
+Administrador & Usuario con permisos para gestionar el sistema, incluyendo la creación y administración de cuentas de usuario. \\
+\hline
+Director & Usuario encargado de supervisar el funcionamiento general del sistema y las actividades académicas. \\
+\hline
+\end{longtable}
+
+
+
+
+\subsubsection{Clase: Token\_Usuario}
+
+\textbf{Descripción:} Clase que almacena la información de autenticación de los usuarios del sistema, incluyendo su identificación, contraseña y rol asociado.
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idUsuario & privado & UUID & 1 & Identificador único alfanumérico generado automáticamente (UUID)\\
+\hline
+contrasena & privado & String & 1 & Cadena cifrada alfanumérica, debe contener mínimo 8 caracteres\\
+\hline
+rol & privado & String & 1 & Nombre del rol asociado al usuario (por ejemplo: “Administrador”, “Profesor”, “Estudiante”)\\
+\hline
+\end{longtable}
+
+\subsubsection{Clase: Grado}
+
+\textbf{Descripción:} Clase que representa el grado académico de los estudiantes. El sistema gestiona tres grados: Párvulos, Caminadores y Pre-jardín. Incluye su identificación y las categorías de logros asociadas a cada grado.
+
+\begin{longtable}{|l|l|l|c|p{4cm}|}
+\hline
+\textbf{Atributo} & \textbf{Visibilidad} & \textbf{Tipo} & \textbf{Multiplicidad} & \textbf{Dominio de Valores}\\
+\hline
+\endhead
+\hline
+\endfoot
+idGrado & privado & UUID & 1 & Identificador único alfanumérico generado automáticamente (UUID)\\
+\hline
+nombreGrado & privado & String & 1 & Valores permitidos: "Párvulos", "Caminadores", "Pre-jardín"\\
+\hline
+categoriasLogros & privado & ArrayList & * & Lista de objetos de tipo \texttt{CategoriaLogro} asociados al grado\\
+\hline
+\end{longtable}
+\subsubsection{Diagrama de Clases}
+A continuación, se presenta el diagrama de clases correspondiente a la capa de entidades, el cual muestra las clases del sistema, sus atributos y las relaciones entre ellas.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{DiagramasClases/diagramaEntidades1.png}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{DiagramasClases/diagramaEntidades2.png}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{DiagramasClases/diagramaEntidades3.png}
+    \caption{Diagrama de clases de la capa de entidades}
+\end{figure}
+
+\subsection{Capa Servicios}
+
+\subsubsection{Clase: AcudienteService}
+
+\small
+\begin{longtable}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: agregarEstudianteACargo}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (estudiante: EstudianteDTO) \\
+\hline
+\textbf{Retorno} & void \\
+\hline
+\textbf{Descripción} & Agrega un estudiante específico a la lista de estudiantes a cargo del acudiente. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: eliminarEstudianteACargo}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idEstudiante: UUID) \\
+\hline
+\textbf{Retorno} & boolean \\
+\hline
+\textbf{Descripción} & Elimina a un estudiante usando su identificador. Retorna el resultado de la operación. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: listarEstudiantesACargo}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idAcudiente: UUID) \\
+\hline
+\textbf{Retorno} & List<EstudianteDTO> \\
+\hline
+\textbf{Descripción} & Obtiene y lista todos los estudiantes que están a cargo del acudiente. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: obtenerEstudiante}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idEstudiante: UUID) \\
+\hline
+\textbf{Retorno} & EstudianteDTO \\
+\hline
+\textbf{Descripción} & Recupera los datos del estudiante asociado al identificador. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: registrarPreinscripcion}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (preinscripcion: PreinscripcionDTO) \\
+\hline
+\textbf{Retorno} & void \\
+\hline
+\textbf{Descripción} & Inicia el proceso de preinscripción para un estudiante. \\
+\hline
+\end{longtable}
+
+\subsubsection{Clase: AdmisionesService}
+
+\small
+\begin{longtable}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: aprobarAspirante}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idPreinscripcion: UUID) \\
+\hline
+\textbf{Retorno} & void \\
+\hline
+\textbf{Descripción} & Aprueba a un aspirante para el proceso de admisión final. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: asignarEstudianteAGrupo}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idEstudiante: UUID, idGrupo: UUID) \\
+\hline
+\textbf{Retorno} & void \\
+\hline
+\textbf{Descripción} & Asigna a un estudiante admitido a un grupo o curso específico. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: asignarProfesorAGrupo}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idProfesor: UUID, idGrupo: UUID) \\
+\hline
+\textbf{Retorno} & void \\
+\hline
+\textbf{Descripción} & Asigna a un profesor a un grupo o curso en particular. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: listarAdmitidos}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & () \\
+\hline
+\textbf{Retorno} & List<EstudianteDTO> \\
+\hline
+\textbf{Descripción} & Obtiene y lista todos los aspirantes que han sido admitidos. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: listarPreinscritos}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & () \\
+\hline
+\textbf{Retorno} & List<PreinscripcionCompletoDTO> \\
+\hline
+\textbf{Descripción} & Obtiene y lista todos los aspirantes en estado de preinscripción. \\
+\hline
+\end{longtable}
+
+\subsubsection{Clase: BoletinService}
+
+\small
+\begin{longtable}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: agregarCategoriaEvaluada}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (evaluacion: EvaluacionDTO) \\
+\hline
+\textbf{Retorno} & void \\
+\hline
+\textbf{Descripción} & Agrega una nueva categoría para evaluación de logros. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: eliminarCategoriaEvaluada}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idCategoria: UUID) \\
+\hline
+\textbf{Retorno} & boolean \\
+\hline
+\textbf{Descripción} & Elimina una categoría evaluada usando su ID. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: generarArchivoPDFBoletin}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idBoletin: UUID) \\
+\hline
+\textbf{Retorno} & byte[] \\
+\hline
+\textbf{Descripción} & Genera el boletín en archivo PDF. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: generarBoletin}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idEstudiante: UUID, periodo: String) \\
+\hline
+\textbf{Retorno} & BoletinDTO \\
+\hline
+\textbf{Descripción} & Ejecuta el proceso de generación general del boletín. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: obtenerCategoriaEvaluada}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idCategoria: UUID) \\
+\hline
+\textbf{Retorno} & EvaluacionDTO \\
+\hline
+\textbf{Descripción} & Obtiene los datos de una categoría evaluada por su ID. \\
+\hline
+\end{longtable}
+
+\subsubsection{Clase: CategoriaLogroService}
+
+\small
+\begin{longtable}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: agregarLogro}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (logro: LogroDTO) \\
+\hline
+\textbf{Retorno} & void \\
+\hline
+\textbf{Descripción} & Agrega un nuevo indicador de evaluación a la dimensión. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: eliminarLogro}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idLogro: UUID) \\
+\hline
+\textbf{Retorno} & boolean \\
+\hline
+\textbf{Descripción} & Elimina un indicador de la dimensión usando su identificador. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: obtenerLogro}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idLogro: UUID) \\
+\hline
+\textbf{Retorno} & LogroDTO \\
+\hline
+\textbf{Descripción} & Obtiene un indicador específico a partir de su identificador. \\
+\hline
+\end{longtable}
+
+\subsubsection{Clase: DirectivoService}
+
+\small
+\begin{longtable}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: listarGruposPorGrado}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (grado: String) \\
+\hline
+\textbf{Retorno} & List<GrupoDTO> \\
+\hline
+\textbf{Descripción} & Obtiene la lista de grupos correspondientes a un grado específico. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: obtenerHistoricoLogros}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idEstudiante: UUID) \\
+\hline
+\textbf{Retorno} & List<EvaluacionDTO> \\
+\hline
+\textbf{Descripción} & Obtiene el histórico completo de evaluaciones booleanas (indicadores cumplidos/no cumplidos) de un estudiante. \\
+\hline
+\end{longtable}
+
+\subsubsection{Clase: ProfesorService}
+
+\small
+\begin{longtable}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: actualizarCumplimientoLogro}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idLogro: UUID) \\
+\hline
+\textbf{Retorno} & void \\
+\hline
+\textbf{Descripción} & Actualiza el estado de cumplimiento de un logro por parte de un estudiante. \\
+\hline
+\end{longtable}
+\subsubsection{Clase: GrupoService}
+
+\small
+\begin{longtable}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: agregarEstudiante}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (estudiante: EstudianteDTO) \\
+\hline
+\textbf{Retorno} & void \\
+\hline
+\textbf{Descripción} & Agrega un estudiante al grupo actual. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: eliminarEstudiante}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idEstudiante: UUID) \\
+\hline
+\textbf{Retorno} & void \\
+\hline
+\textbf{Descripción} & Elimina un estudiante del grupo usando su identificador. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: obtenerEstudiante}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idEstudiante: UUID) \\
+\hline
+\textbf{Retorno} & EstudianteDTO \\
+\hline
+\textbf{Descripción} & Obtiene los datos de un estudiante específico del grupo. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: obtenerListadoEstudiantes}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idGrupo: UUID) \\
+\hline
+\textbf{Retorno} & List<EstudianteDTO> \\
+\hline
+\textbf{Descripción} & Recupera y lista todos los estudiantes que pertenecen al grupo. \\
+\hline
+\end{longtable}
+
+\subsubsection{Clase: LogroService}
+
+\small
+\begin{longtable}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: mostrarHistoricoLogros}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idEstudiante: UUID) \\
+\hline
+\textbf{Retorno} & List<EvaluacionDTO> \\
+\hline
+\textbf{Descripción} & Muestra el historial completo de evaluaciones booleanas de indicadores alcanzados. \\
+\hline
+\end{longtable}
+
+\subsubsection{Clase: EstudianteService}
+
+\small
+\begin{longtable}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: agregarBoletin}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (boletin: BoletinDTO) \\
+\hline
+\textbf{Retorno} & void \\
+\hline
+\textbf{Descripción} & Agrega un nuevo boletín al registro del estudiante. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: eliminarBoletin}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idBoletin: UUID) \\
+\hline
+\textbf{Retorno} & boolean \\
+\hline
+\textbf{Descripción} & Elimina un boletín del registro usando su identificador. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: obtenerBoletin}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idBoletin: UUID) \\
+\hline
+\textbf{Retorno} & BoletinDTO \\
+\hline
+\textbf{Descripción} & Obtiene un boletín específico del registro del estudiante por su identificador. \\
+\hline
+\end{longtable}
+\end{longtable}
+
+\subsubsection{Clase: HojaDeVidaService}
+
+\small
+\begin{longtable}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: actualizarHojaDeVida}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idEstudiante: UUID) \\
+\hline
+\textbf{Retorno} & void \\
+\hline
+\textbf{Descripción} & Actualiza información contenida en la hoja de vida de un estudiante. \\
+\hline
+\end{longtable}
+
+\subsubsection{Clase: AdministradorService}
+
+\small
+\begin{longtable}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: crearUsuario}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (datos: CrearUsuarioDTO) \\
+\hline
+\textbf{Retorno} & UsuarioDTO \\
+\hline
+\textbf{Descripción} & Crea un nuevo usuario en el sistema con sus credenciales y datos básicos. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: consultarPorId}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idUsuario: UUID) \\
+\hline
+\textbf{Retorno} & UsuarioDTO \\
+\hline
+\textbf{Descripción} & Obtiene los datos completos de un usuario específico por su identificador. \\
+\hline
+\end{longtable}
+
+\subsubsection{Clase: UsuarioService}
+
+\small
+\begin{longtable}{|p{3.5cm}|p{9.5cm}|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: autenticar}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (credenciales: CredencialesDTO) \\
+\hline
+\textbf{Retorno} & UsuarioDTO \\
+\hline
+\textbf{Descripción} & Valida las credenciales de acceso y retorna los datos del usuario autenticado. \\
+\hline
+\hline
+\multicolumn{2}{|c|}{\textbf{Método: ingresarDatosPersonales}} \\
+\hline
+\textbf{Visibilidad} & Pública \\
+\hline
+\textbf{Parámetros} & (idUsuario: UUID, datos: DatosPersonalesDTO) \\
+\hline
+\textbf{Retorno} & UsuarioDTO \\
+\hline
+\textbf{Descripción} & Registra o actualiza los datos personales del usuario por primera vez. \\
+\hline
+\end{longtable}
+
+A continuación, se presentan las clases correspondientes a la capa de servicios del sistema, las cuales encapsulan la lógica de negocio y gestionan las operaciones principales relacionadas con las entidades.
+
+El diagrama siguiente muestra una porción representativa de la arquitectura de servicios del sistema. Cabe aclarar que todos los servicios siguen el mismo patrón de diseño: cada servicio está compuesto por una interfaz que declara las firmas de los métodos y una clase de implementación que contiene la lógica de negocio concreta. Por razones de espacio, únicamente se muestran algunos servicios a modo de ejemplo, dado que la estructura es consistente en todos los casos.
+
+\begin{figure}[H] 
+        \centering
+        \includegraphics[width=1\textwidth]{servicios/services.png}
+        \caption{Capa de Servicios}
+\end{figure}
+\noindent \textit{Nota:} Se aclara que, por motivos de espacio y concisión, los métodos de acceso a atributos (\textit{getters} y \textit{setters}) han sido omitidos en la especificación de las tablas, aunque se asume su existencia en todas las clases que los requieran.
+% ======================================
+% 7. MODELADO DE PERSISTENCIA
+% ======================================
+\section{Modelado de Persistencia}
+
+\subsection{Modelo Relacional}
+
+El modelo relacional del sistema comprende 9 tablas principales que mapean directamente a las entidades del dominio. La integridad referencial se garantiza mediante claves foráneas con restricciones apropiadas.
+
+A continuación, se presenta el modelo relacional correspondiente al sistema, donde se muestran las entidades, sus atributos y las relaciones existentes entre ellas.
+\begin{figure}[H] 
+        \centering
+        \includegraphics[width=1\textwidth]{relacional/relacional1.png}
+\end{figure}
+\vspace{0.5cm}
+\begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{relacional/relacional2.png}
+\end{figure}
+\vspace{0.5cm}
+\begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{relacional/relacional3.png}
+\end{figure}
+\vspace{0.5cm}
+\begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{relacional/relacional4.png}
+\end{figure}
+\vspace{0.5cm}
+\begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{relacional/relacional5.png}
+      \caption{Modelo relacional}
+      \end{figure}
+\vspace{0.5cm}
+
+
+
+\subsection{Mapeo Objeto Relacional (ORM)}
+
+La solución implementa Spring Data JPA con Hibernate para el mapeo automático entre objetos y tablas.
+
+\subsubsection{Patrón de Fuente de Datos: Data Mapper}
+
+El patrón \textbf{Data Mapper} se aplica a todo el sistema, separando completamente la lógica de persistencia del modelo de dominio. Este patrón es fundamental en la arquitectura, ya que desacopla el mapeo de las entidades del dominio hacia una clase externa especializada: el \textbf{Repository}. 
+
+Es especialmente importante en la gestión de la jerarquía de herencia de Usuario y su relación 1:1 con Token\_Usuario, donde ayuda a mantener la integridad de estas relaciones sin duplicación de datos.
+
+\paragraph{Principio del Data Mapper:}
+
+A diferencia de otros patrones de persistencia como el \textbf{Active Record}, donde las entidades contienen métodos para guardarse a sí mismas (\texttt{save()}, \texttt{delete()}), el patrón Data Mapper \textbf{externaliza} toda la responsabilidad de persistencia a una clase separada llamada \textbf{mapeador} o \textbf{repository}.
+
+En el sistema, las clases \texttt{Repository} actúan como mapeadores que:
+\begin{itemize}
+    \item Transforman objetos del dominio (entidades) en registros de base de datos
+    \item Reconstruyen objetos del dominio a partir de datos persistidos
+    \item Ejecutan operaciones CRUD sin que las entidades tengan conocimiento de la base de datos
+\end{itemize}
+
+\paragraph{Desacoplamiento mediante Repository:}
+
+El uso del patrón Data Mapper en el proyecto se materializa a través de las clases \texttt{Repository}, que heredan de \texttt{JpaRepository<T, ID>}. Esto permite que:
+
+\begin{itemize}
+    \item \textbf{Entidades permanezcan puras} --- No contienen lógica de persistencia ni referencias a frameworks
+    \item \textbf{La capa de persistencia sea intercambiable} --- Podemos cambiar de base de datos o tecnología ORM sin modificar las entidades
+    \item \textbf{Se faciliten las pruebas} --- Las entidades pueden probarse sin necesidad de una base de datos real
+    \item \textbf{Se respete el principio de responsabilidad única} --- Cada clase tiene una sola razón para cambiar
+\end{itemize}
+
+
+
+
+\paragraph{Componentes:}
+
+\begin{enumerate}
+    \item \textbf{Entidades} --- Clases POJO puras (Usuario, Estudiante, Grupo, etc.). Contienen solo atributos y accesores. Sin lógica de persistencia ni conocimiento de la base de datos.
+    
+    \item \textbf{Repositorios (Mapeadores externos)} --- Interfaces especializadas que manejan operaciones CRUD y consultas personalizadas. Actúan como capa de mapeo entre el dominio y la base de datos. Por ejemplo, el \texttt{UsuarioRepository} proporciona:
+    \begin{itemize}
+        \item Operaciones estándar: crear, actualizar, eliminar, buscar por ID
+        \item Consultas personalizadas: buscar por credenciales de usuario, filtrar por rol
+        \item Transformación automática entre entidades del dominio y registros de BD
+    \end{itemize}
+    
+    \item \textbf{Servicios} --- Capa de aplicación. Orquesta operaciones usando repositorios. Implementa lógica de negocio y validaciones. Nunca accede directamente a las tablas de la base de datos.
+    
+    \item \textbf{DTOs} --- Objetos de transferencia para API REST. Desacopla la estructura de base de datos de la presentación.
+\end{enumerate}
+
+\vspace{0.3cm}
+
+\subsubsection{Diagrama de Paquetes}
+
+A continuación se presenta el diagrama de paquetes del sistema, que muestra la organización modular y las dependencias entre los principales paquetes (presentación, servicios, repositorios, entidades y demás componentes). Este diagrama facilita la comprensión de cómo se estructuran físicamente las responsabilidades lógicas definidas en la arquitectura en capas.
+
+\begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.95\textwidth]{paquetes/diagrama_paquetes.png}
+    \caption{Diagrama de paquetes -- Organización modular del sistema}
+\end{figure}
+
+\vspace{0.5cm}
+
+\subsubsection{Diagrama de Repositorios}
+
+A continuación, se presenta una porción representativa de la arquitectura de repositorios del sistema. Debido a que todos los repositorios siguen el mismo patrón arquitectónico (interfaz que declara consultas específicas e implementación automática gestionada por el framework), se muestran solo algunos ejemplos ilustrativos.
+
+\begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.95\textwidth]{repositorios/repositorios.png}
+    \caption{Diagrama de repositorios - Patrón Data Mapper}
+\end{figure}
+
+\vspace{0.5cm}
+
+\subsection{Estrategias de Mapeo}
+\subsubsection{Estrategia de Herencia: JOINED TABLE (Tabla por Subclase)}
+
+La jerarquía de \textbf{Usuario} implementa la estrategia \textbf{JOINED TABLE}, donde cada clase (superclase y subclases) se mapea a su propia tabla, relacionadas mediante claves foráneas.
+
+Esta estrategia se aplica específicamente a la jerarquía de usuarios del sistema, siendo fundamental para preservar la relación 1:1 entre Usuario y Token\_Usuario sin comprometer la normalización ni la integridad referencial.
+
+
+\paragraph{Justificación de la Estrategia:}
+
+Se eligió JOINED TABLE para la jerarquía de Usuario (en lugar de SINGLE\_TABLE u otras alternativas) por las siguientes razones críticas:
+
+\begin{enumerate}
+    \item \textbf{Preservación de relaciones críticas:} La relación 1:1 entre USUARIO y TOKEN\_USUARIO se mantiene limpia sin duplicación. Cada usuario tiene un único token de autenticación independientemente de su tipo especializado (Profesor, Acudiente, Directivo, etc.).
+    
+    \item \textbf{Normalización:} No hay columnas NULL innecesarias. Cada tabla contiene únicamente los atributos relevantes para ese tipo de usuario, evitando el desperdicio de espacio que ocurriría con SINGLE\_TABLE.
+    
+    \item \textbf{Integridad referencial:} Las restricciones de clave foránea garantizan que cada subclase tenga una entrada válida en USUARIO, manteniendo la consistencia de las credenciales de acceso.
+    
+    \item \textbf{Extensibilidad:} Agregar nuevos tipos de usuario no requiere modificar la tabla USUARIO ni afectar la relación con TOKEN\_USUARIO ni las relaciones existentes.
+\end{enumerate}
+
+\subsubsection{Campo Identidad}
+\noindent
+En el presente sistema, se implementa el uso de \textbf{UUID (Universally Unique Identifier)} como identificador principal en cada una de las entidades del modelo. 
+Este identificador tiene la finalidad de garantizar la \textbf{unicidad} de cada registro, evitando posibles conflictos entre los datos almacenados. 
+Los UUID son \textbf{autogenerados} de manera automática por el sistema, lo que elimina la necesidad de que el usuario intervenga en su creación. 
+Además, son \textbf{no significativos}, es decir, no contienen información relacionada con el registro que identifican, lo que contribuye a mejorar la seguridad y la integridad de la base de datos. 
+De esta forma, cada tabla cuenta con una clave primaria \textbf{simple, única y estable}, asegurando la correcta trazabilidad y consistencia de la información en todo el sistema.
+
+
+\subsection{Capa de Presentación}
+
+La \textbf{capa de presentación} actúa como punto de entrada al sistema, exponiendo las funcionalidades de la aplicación a través de una API REST. Esta capa está compuesta por \textbf{controladores} que reciben las peticiones HTTP de los clientes, delegan la lógica de negocio a la capa de servicios y retornan respuestas adecuadas.
+
+Los controladores trabajan exclusivamente con \textbf{Data Transfer Objects (DTOs)}, objetos especializados que encapsulan datos para transferencia entre capas, garantizando que las entidades del dominio nunca se expongan directamente al exterior.
+
+\subsubsection{Data Transfer Objects (DTOs)}
+
+Los DTOs son objetos simples que transportan datos entre procesos, específicamente entre la capa de presentación y los clientes externos. A diferencia de las entidades del dominio, los DTOs no contienen lógica de negocio ni conocimiento de persistencia, únicamente estructuran datos para comunicación.
+
+\paragraph{Propósito de los DTOs:}
+
+\begin{itemize}
+    \item \textbf{Desacoplar la API del modelo de dominio} --- Cambios en las entidades no afectan los contratos de la interfaz externa
+    \item \textbf{Controlar la información expuesta} --- Solo se envían los datos necesarios al cliente, ocultando detalles internos
+    \item \textbf{Optimizar transferencia de datos} --- Reducir carga de comunicación eliminando relaciones circulares y datos innecesarios
+    \item \textbf{Facilitar versionamiento} --- Múltiples DTOs pueden representar diferentes versiones de interfaz para la misma entidad
+    \item \textbf{Validación de entrada} --- Los DTOs actúan como contratos de entrada validables antes de llegar a la lógica de negocio
+\end{itemize}
+
+\paragraph{Catálogo de DTOs del Sistema:}
+
+\vspace{0.3cm}
+
+\textbf{DTOs de Usuario y Autenticación:}
+
+\begin{itemize}
+    \item \textbf{UsuarioDTO} --- Representa información básica de un usuario del sistema. Contiene identificador único, datos personales (nombre, apellido, cédula, correo electrónico, fecha de nacimiento) y rol asignado.
+    
+    \item \textbf{CredencialesDTO} --- Encapsula las credenciales de acceso para autenticación. Incluye correo electrónico y contraseña.
+    
+    \item \textbf{TokenDTO} --- Representa la respuesta de autenticación exitosa. Contiene el token generado, tipo de token, tiempo de expiración y datos básicos del usuario autenticado.
+    
+    \item \textbf{RegistroDTO} --- Transporta los datos necesarios para crear un nuevo usuario en el sistema. Incluye información personal básica y el rol asignado.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{DTOs de Estudiantes y Admisiones:}
+
+\begin{itemize}
+    \item \textbf{EstudianteDTO} --- Representa información completa de un estudiante. Incluye datos personales, número de documento, estado, referencias a acudiente y grupo asignado, y la hoja de vida académica.
+    
+    \item \textbf{PreinscripcionDTO} --- Encapsula los datos necesarios para preinscribir un estudiante. Contiene información del estudiante (nombre, apellido, documento) y datos de contacto del acudiente (correo, teléfono), además del grado al que aspira ingresar.
+    
+    \item \textbf{PreinscripcionCompletoDTO} --- Representa una solicitud completa de preinscripción con toda la información necesaria para el proceso de admisión. Incluye datos del estudiante, información del acudiente, grado solicitado, estado de la solicitud (pendiente, aceptado, rechazado) y fecha de registro.
+    
+    \item \textbf{AdmisionDTO} --- Transporta la información necesaria para admitir formalmente a un estudiante preinscrito. Incluye identificadores del estudiante y grupo asignado, estado de admisión y fecha del proceso.
+    
+    \item \textbf{HojaDeVidaDTO} --- Representa la hoja de vida académica de un estudiante. Contiene identificadores únicos, detalles médicos relevantes, observaciones sobre su proceso de aprendizaje y fecha de última actualización.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{DTOs de Grupos y Organización Académica:}
+
+\begin{itemize}
+    \item \textbf{GrupoDTO} --- Representa un grupo escolar. Incluye identificador, nombre del grupo, grado académico, identificador del director de grupo (profesor) y cantidad de estudiantes matriculados.
+    
+    \item \textbf{GrupoDetalladoDTO} --- Representa información completa de un grupo específico. Incluye todos los datos básicos del grupo, información del profesor asignado como director de grupo, listado completo de estudiantes matriculados y estadísticas adicionales.
+    
+    \item \textbf{GradoConGruposDTO} --- Representa la estructura jerárquica de un grado académico con sus grupos asociados. Incluye identificador y nombre del grado (Párvulos, Caminadores o Pre-jardín) junto con la colección de grupos pertenecientes a ese grado.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{DTOs de Evaluación y Logros:}
+
+\begin{itemize}
+    \item \textbf{LogroDTO} --- Representa un indicador de evaluación específico. Cada indicador pertenece a una dimensión (Psicosocial, Psicomotor, Cognitivo o Procedimental) y se evalúa de forma booleana (cumplido/no cumplido). Describe un criterio observable y evaluable del desarrollo infantil. Contiene identificador único, descripción del criterio de evaluación y referencia a la dimensión a la que pertenece.
+    
+    \item \textbf{CategoriaLogroDTO} --- Representa una dimensión de evaluación del desarrollo infantil. El sistema maneja 4 dimensiones: Psicosocial (comunicación, trabajo en equipo, empatía), Psicomotor (coordinación motora, habilidades físicas), Cognitivo (razonamiento lógico, resolución de problemas) y Procedimental (autonomía, seguimiento de instrucciones). Cada dimensión puede contener múltiples indicadores específicos que se evalúan de forma booleana. Incluye identificador, nombre de la dimensión, descripción y lista de indicadores asociados.
+    
+    \item \textbf{EvaluacionDTO} --- Encapsula la evaluación de logros de un estudiante. El sistema implementa evaluación booleana donde cada indicador se marca como cumplido o no cumplido. Contiene identificadores del estudiante y dimensión evaluada (Psicosocial, Psicomotor, Cognitivo, Procedimental), lista de indicadores con sus estados (cumplido/no cumplido), puntuación calculada automáticamente (0-100), fecha de evaluación y periodo académico. La puntuación se calcula como: (indicadores cumplidos / total indicadores) × 100.
+    
+    \item \textbf{BoletinDTO} --- Representa un boletín académico completo de un estudiante. Incluye identificador único, referencia al estudiante, periodo académico, lista completa de evaluaciones del periodo y fecha de generación del boletín.
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{DTOs de Administración:}
+
+\begin{itemize}
+    \item \textbf{UsuarioCreacionDTO} --- Encapsula los datos necesarios para que un administrador cree un nuevo usuario en el sistema. Incluye nombre completo, correo electrónico único, rol asignado (Profesor, Coordinador, Acudiente, Directivo, Administrador) y contraseña temporal generada.
+    
+    \item \textbf{AcudienteDTO} --- Representa información específica de un acudiente, incluyendo datos de contacto (teléfono) y la lista de estudiantes bajo su responsabilidad.
+    
+    \item \textbf{ProfesorDTO} --- Contiene información específica de un profesor, incluyendo especialidad y listado de grupos asignados como director de grupo.
+\end{itemize}
+
+\subsubsection{Responsabilidades de los Controladores}
+
+Los controladores tienen responsabilidades específicas y acotadas que garantizan la separación de responsabilidades en la arquitectura:
+
+\begin{enumerate}
+    \item \textbf{Gestión de peticiones HTTP} --- Recibir y procesar solicitudes GET, POST, PUT, DELETE desde clientes externos (aplicaciones web, móviles, etc.)
+    
+    \item \textbf{Validación de entrada} --- Verificar formato y consistencia de los datos recibidos antes de procesarlos (validación sintáctica)
+    
+    \item \textbf{Delegación a servicios} --- Invocar los métodos apropiados de la capa de servicios, sin implementar lógica de negocio propia
+    
+    \item \textbf{Transformación de datos} --- Convertir entre objetos del dominio (Entidades) y objetos de transferencia (DTOs) para comunicación externa
+    
+    \item \textbf{Gestión de respuestas} --- Construir respuestas HTTP apropiadas con códigos de estado, mensajes de error y datos serializados (JSON)
+    
+    \item \textbf{Manejo de excepciones} --- Capturar errores de las capas inferiores y transformarlos en respuestas HTTP comprensibles para el cliente
+\end{enumerate}
+
+\subsubsection{Arquitectura de Controladores}
+
+El sistema organiza los controladores por contexto funcional, exponiendo endpoints RESTful para cada entidad principal del dominio:
+
+\paragraph{Controladores principales:}
+
+\begin{itemize}
+    \item \textbf{UsuarioController} --- Gestiona consultas y operaciones sobre usuarios
+    \begin{itemize}
+        \item GET /api/usuarios/\{id\} --- Consultar datos de usuario
+        \item POST /api/usuarios --- Registrar nuevo usuario
+        \item PUT /api/usuarios/\{id\}/datos-iniciales --- Completar datos personales por primera vez
+    \end{itemize}
+    
+    \item \textbf{EstudianteController} --- Administra información de estudiantes
+    \begin{itemize}
+        \item GET /api/estudiantes/\{id\} --- Consultar datos de estudiante
+        \item GET /api/estudiantes/grupo/\{idGrupo\} --- Listar estudiantes de un grupo
+        \item GET /api/estudiantes/acudiente/\{idAcudiente\} --- Visualizar estudiantes a cargo
+        \item POST /api/estudiantes/preinscripcion --- Preinscribir estudiante
+        \item PUT /api/estudiantes/\{id\}/admision --- Admitir estudiante
+        \item GET /api/estudiantes/preinscritos --- Listar estudiantes preinscritos
+        \item GET /api/estudiantes/admitidos --- Listar estudiantes admitidos
+        \item GET /api/estudiantes/descarga --- Descargar listado de estudiantes
+        \item PUT /api/estudiantes/\{id\}/hoja-vida --- Gestionar hoja de vida académica
+    \end{itemize}
+    
+    \item \textbf{GrupoController} --- Gestiona consultas y administración de grupos
+    \begin{itemize}
+        \item GET /api/grupos/grado/\{grado\} --- Visualizar grupos por grado
+        \item POST /api/grupos --- Gestionar creación de grupos (admisiones)
+    \end{itemize}
+    
+    \item \textbf{LogroController} --- Administra evaluaciones booleanas de indicadores del desarrollo infantil
+    \begin{itemize}
+        \item POST /api/logros/evaluacion --- Gestionar evaluación de indicadores (cumplido/no cumplido)
+        \item GET /api/logros/estudiante/\{id\}/historico --- Consultar histórico de evaluaciones de indicadores
+        \item GET /api/logros/estudiante/\{id\}/historico/descarga --- Descargar histórico de evaluaciones
+    \end{itemize}
+    
+    \item \textbf{BoletinController} --- Maneja generación y descarga de boletines
+    \begin{itemize}
+        \item GET /api/boletines/estudiante/\{id\}/descarga --- Descargar boletín académico
+    \end{itemize}
+    
+    \item \textbf{AutenticacionController} --- Maneja autenticación y control de acceso
+    \begin{itemize}
+        \item POST /api/auth/login --- Autenticar usuario
+        \item POST /api/auth/registro --- Crear usuario y contraseña
+    \end{itemize}
+    
+    \item \textbf{AdministradorController} --- Gestiona la administración general de usuarios del sistema
+    \begin{itemize}
+        \item GET /api/admin/usuarios --- Listar todos los usuarios registrados
+        \item POST /api/admin/usuarios --- Crear nuevo usuario en el sistema
+        \item GET /api/admin/usuarios/\{id\} --- Consultar información específica de un usuario
+    \end{itemize}
+    
+    \item \textbf{CoordinadorController} --- Administra el módulo de admisiones y organización académica
+    \begin{itemize}
+        \item GET /api/coordinador/preinscripciones --- Listar todas las solicitudes de preinscripción
+        \item PUT /api/coordinador/preinscripcion/\{id\}/aceptar --- Aprobar solicitud de preinscripción
+        \item PUT /api/coordinador/preinscripcion/\{id\}/rechazar --- Rechazar solicitud de preinscripción
+        \item GET /api/coordinador/estudiantes-disponibles --- Obtener estudiantes sin grupo asignado
+        \item GET /api/coordinador/profesores --- Listar profesores disponibles
+        \item POST /api/coordinador/grupos --- Crear nuevo grupo académico
+    \end{itemize}
+    
+    \item \textbf{DirectivoController} --- Gestiona funcionalidades de supervisión y consulta académica
+    \begin{itemize}
+        \item GET /api/directivo/grados-grupos --- Obtener estructura jerárquica de grados y grupos
+        \item GET /api/directivo/grupo/\{id\} --- Consultar información detallada de un grupo específico
+        \item GET /api/directivo/estudiante/\{id\}/perfil --- Obtener perfil completo de estudiante
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Flujo de una Petición}
+
+El procesamiento de una petición HTTP en la capa de presentación sigue el siguiente flujo:
+
+\begin{enumerate}
+    \item \textbf{Cliente} envía petición HTTP (ej: POST /api/logros/evaluacion con datos de evaluación en JSON)
+    
+    \item \textbf{Controlador} recibe la petición, valida formato de datos (DTO)
+    
+    \item \textbf{Controlador} invoca método del \textbf{Servicio} correspondiente
+    
+    \item \textbf{Servicio} ejecuta lógica de negocio, valida reglas de dominio
+    
+    \item \textbf{Servicio} utiliza \textbf{Repository} para persistir/consultar datos
+    
+    \item \textbf{Repository} mapea entidades a tablas de base de datos (Data Mapper)
+    
+    \item \textbf{Servicio} retorna resultado al \textbf{Controlador}
+    
+    \item \textbf{Controlador} transforma la entidad en DTO, construye respuesta HTTP
+    
+    \item \textbf{Cliente} recibe respuesta (código 201 Created + confirmación de evaluación en JSON)
+\end{enumerate}
+
+\subsubsection{Integración con el Patrón Data Mapper}
+
+La capa de presentación complementa el patrón Data Mapper implementado en el sistema:
+
+\begin{itemize}
+    \item \textbf{Desacoplamiento completo} --- Los controladores trabajan con DTOs, nunca con entidades directamente expuestas. Esto evita exponer detalles de implementación de persistencia al cliente.
+    
+    \item \textbf{Transformación de datos} --- Los DTOs representan contratos de API independientes del modelo de dominio. Si cambia la estructura de base de datos (modificación en estrategia JOINED TABLE), los DTOs y endpoints pueden mantenerse estables.
+    
+    \item \textbf{Validación en capas} --- Los controladores validan formato (sintaxis), los servicios validan lógica de negocio (semántica), y los repositories manejan persistencia. Cada capa tiene responsabilidades claras.
+    
+    \item \textbf{Repositorio como intermediario} --- Los servicios utilizan los repositories (mapeadores externos) para acceder a datos, y los controladores utilizan los servicios. Ninguna capa inferior conoce los detalles de las capas superiores.
+\end{itemize}
+
+
+% ======================================
+% 8. DISEÑO INTERFAZ GRÁFICA DE USUARIO
+% ======================================
+\section{Diseño Interfaz Gráfica de Usuario}
+
+\subsection{Mapa de Navegación y bocetos visuales}
+
+La arquitectura de navegación está estructurada por roles (subclases de Usuario). Cada rol accede a módulos específicos con funcionalidades personalizadas.
+
+\vspace{0.3cm}
+\subsubsection{Usuario}
+\begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.8\textwidth]{mockups/mapaUsuario.png}
+  \caption{Mapa de navegación del Usuario}
+\end{figure}
+\begin{itemize}
+    \item Inicio de sesión
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.7\textwidth]{mapasNavegacion/iniciarSesion.png}
+         \caption{Boceto visual inciar sesión}
+        \end{figure}
+    \item Ingresar datos personales por primera vez
+         \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.7\textwidth]{mapasNavegacion/ingresarDatos.png}
+         \caption{Boceto visual ingresar datos personales}
+        \end{figure}
+    
+\end{itemize}
+\subsubsection{Aspirante}
+\begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.8\textwidth]{mapasNavegacion/aspirante.png}
+  \caption{Mapa de navegación del Aspirante}
+\end{figure}
+\begin{itemize}
+    \item Inicio de la página web (información general)
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.7\textwidth]{mockups/incio.png}
+         \caption{Boceto visual incio aspirante}
+        \end{figure}
+    \item Formulario de preinscripción para aspirantes
+         \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.7\textwidth]{mockups/preinscipcion.png}
+         \caption{Boceto visual aspirante incio}
+        \end{figure}
+    
+\end{itemize}
+
+
+\subsubsection{Profesor}
+\begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.8\textwidth]{mapasNavegacion/mapaProfesor.png}
+  \caption{Mapa de navegación del Profesor}
+\end{figure}
+\begin{itemize}
+    \item Inicio de la página web (información general)
+         \begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.8\textwidth]{mockups/incio.png}
+  \caption{Boceto visual incio acudiente}
+\end{figure}
+    \item Listado estudiantes
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/inicioProfesor.png}
+         \caption{Boceto visual listado estudiantes del profesor}
+        \end{figure}
+    \item Histórico de Logros
+      \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.7\textwidth]{mockups/profHistorico1.png}
+        \end{figure}
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.7\textwidth]{mockups/profHistorico2.png}
+        \caption{Boceto visual histórico de logros}
+        \end{figure}
+    \item Gestionar Logros
+    \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.7\textwidth]{mockups/profGestionLogros1.png}
+        \end{figure}
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.7\textwidth]{mockups/profGestionLogros2.png}
+        \caption{Boceto visual gestión de logros}
+        \end{figure}
+    \item Visualizar Logros
+\end{itemize}
+
+\subsubsection{Acudiente}
+\begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.8\textwidth]{mapasNavegacion/mapaAcudiente.png}
+  \caption{Mapa de navegación del Acudiente}
+\end{figure}
+\begin{itemize}
+    \item Inicio de la página web (información general)
+    \begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.8\textwidth]{mockups/incio.png}
+  \caption{Boceto visual incio acudiente}
+\end{figure}
+    \item Visualizar estudiantes a cargo
+      \begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.8\textwidth]{mockups/incioAcudiente.png}
+  \caption{Boceto visual estudiantes a cargo del acudiente}
+\end{figure}
+    \item Consultar histórico de logros
+     \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.7\textwidth]{mockups/acudienteHistorico1.png}
+        \end{figure}
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.7\textwidth]{mockups/acudienteHistorico2.png}
+        \caption{Boceto visual histórico de logros}
+        \end{figure}
+    \item Descargar boletín
+         \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.7\textwidth]{mockups/acudienteDescargarHistorico.png}
+        \caption{Boceto visual descargar boletín}
+        \end{figure}
+\end{itemize}
+
+\subsubsection{Directivo}
+\begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.8\textwidth]{mapasNavegacion/mapaDirectivo.png}
+  \caption{Mapa de navegación del Directivo}
+\end{figure}
+\begin{itemize}
+   \item Inicio de la página web (información general)
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/incio.png}
+      \caption{Boceto visual incio directivo}
+      \end{figure}
+    \item Grupos por grado
+      \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/dirGrupos.png}
+      \end{figure}
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/dirGrupos2.png}
+      \caption{Boceto visual grupos por grado}
+      \end{figure}
+    \item Consultar Listado Estudiantes
+      \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/listadoEstudiantesdir.png}
+      \caption{Boceto visual listado estudiantes}
+      \end{figure}
+    \item Histórico de Logros
+      \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/hisDir1.png}
+      \end{figure}
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/hisDir2.png}
+      \caption{Boceto visual histórico de logros}
+      \end{figure}
+    \item Hoja de Vida Académica
+      \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/dirGestionHojaVida.png}
+      \caption{Boceto visual gestión hoja de vida}
+      \end{figure}
+\end{itemize}
+
+\subsubsection{Coordinador}
+\begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.8\textwidth]{mapasNavegacion/mapaCoordinador.png}
+  \caption{Mapa de navegación del Directivo}
+\end{figure}
+\begin{itemize}
+   \item Inicio de la página web (información general)
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/incio.png}
+      \caption{Boceto visual incio coordinador}
+      \end{figure}
+    \item Estudiantes preinscritos
+      \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/estudiantesPreincritosCoordi.png}
+      \end{figure}
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/dirGrupos2.png}
+      \caption{Boceto visual listado estudiantes preinscritos}
+      \end{figure}
+    \item Creación de grupos
+      \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/creacionGrupos.png}
+      \caption{Boceto visual creación de grupos}
+      \end{figure}
+\end{itemize}
+
+\subsubsection{Administrador}
+\begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.8\textwidth]{mapasNavegacion/mapaNavAdmin.png}
+  \caption{Mapa de navegación del Administrador}
+\end{figure}
+\begin{itemize}
+   \item Inicio de la página web (información general)
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/incio.png}
+      \caption{Boceto visual incio administrador}
+      \end{figure}
+       \item Listado de Usuarios
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/listadoAdmin.png}
+      \caption{Boceto visual listado de usuarios}
+      \end{figure}
+       \item Crear Usuario
+        \begin{figure}[H] 
+        \centering
+        \includegraphics[width=0.8\textwidth]{mockups/crearUsuarioAdmin.png}
+      \caption{Boceto visual de crear usuarios}
+      \end{figure}
+
+\end{itemize}
+
+\section{Bibliografía}
+\bibitem{fowler2002}
+Fowler, M. (2002). \textit{Patterns of Enterprise Application Architecture}. Addison-Wesley Professional. ISBN: 978-0321127420.
+
+\bibitem{fowlerRepository}
+Hieatt, E., \& Mee, R. (2003). \textit{Repository Pattern}. In M. Fowler, Patterns of Enterprise Application Architecture Catalog. Retrieved from \url{https://martinfowler.com/eaaCatalog/repository.html}
+
+\bibitem{fowlerUnitOfWork}
+Fowler, M. (2003). \textit{Unit of Work Pattern}. Patterns of Enterprise Application Architecture Catalog. Retrieved from \url{https://martinfowler.com/eaaCatalog/unitOfWork.html}
+
+\bibitem{evans2003}
+Evans, E. (2003). \textit{Domain-Driven Design: Tackling Complexity in the Heart of Software}. Addison-Wesley Professional. ISBN: 978-0321125215.
+
+\bibitem{microsoft2023}
+Microsoft Corporation. (2023). \textit{Design the Infrastructure Persistence Layer}. In .NET Microservices: Architecture for Containerized .NET Applications. Retrieved from \url{https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-design}
+
+\bibitem{springData2025}
+Broadcom Inc. (2025). \textit{Spring Data JPA - Reference Documentation}. Spring Framework Documentation. Retrieved from \url{https://docs.spring.io/spring-data/jpa/reference/repositories.html}
+
+\bibitem{blancarte2021}
+Blancarte, O. (2021). \textit{Arquitectura en Capas} [Blog]. Retrieved from \url{https://reactiveprogramming.io/blog/es/estilos-arquitectonicos/capas}
+
+\bibitem{aws2025}
+Amazon Web Services, Inc. (2025). \textit{What is Object-Relational Mapping (ORM)?}. Retrieved from \url{https://aws.amazon.com/what-is/object-relational-mapping/}
+
+\end{document}
+
+
+
+
