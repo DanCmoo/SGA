@@ -8,6 +8,7 @@ import { GuardianAchievementsModal } from "@/components/guardian-achievements-mo
 import { Toast } from "@/components/toast"
 import { LoadingSkeleton } from "@/components/loading-skeleton"
 import { EmptyState } from "@/components/empty-state"
+import { useAuth } from "@/contexts/auth-context"
 
 const guardianData = {
   name: "Laura Sofía Perez Perez",
@@ -19,6 +20,7 @@ const guardianData = {
 
 export default function AcudientePage() {
   const router = useRouter()
+  const { logout } = useAuth()
   const [selectedStudent, setSelectedStudent] = useState<{ id: number; name: string } | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
@@ -41,14 +43,23 @@ export default function AcudientePage() {
     <div className="min-h-screen bg-gradient-to-br from-beige-50 via-beige-100/30 to-navy-50/20">
       <header className="bg-gradient-to-r from-navy-600 via-navy-700 to-brown-600 text-white py-8 px-8 shadow-xl shadow-navy-600/20 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii4wNSIvPjwvZz48L3N2Zz4=')] opacity-30"></div>
-        <div className="relative container mx-auto max-w-5xl flex items-center gap-4">
-          <Button onClick={() => router.push("/")} variant="ghost" className="text-white hover:bg-white/10 rounded-xl">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight">Portal del Acudiente</h1>
-            <div className="h-1 w-32 bg-gradient-to-r from-coral-400 to-transparent rounded-full mt-2"></div>
+        <div className="relative container mx-auto max-w-5xl flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button onClick={() => router.push("/")} variant="ghost" className="text-white hover:bg-white/10 rounded-xl">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight">Portal del Acudiente</h1>
+              <div className="h-1 w-32 bg-gradient-to-r from-coral-400 to-transparent rounded-full mt-2"></div>
+            </div>
           </div>
+          <Button
+            onClick={logout}
+            variant="ghost"
+            className="text-white hover:bg-white/20 border-2 border-white/30 hover:border-white/50 px-6 py-2 rounded-xl font-bold transition-all duration-300"
+          >
+            Cerrar Sesión
+          </Button>
         </div>
       </header>
       {/* </CHANGE> */}

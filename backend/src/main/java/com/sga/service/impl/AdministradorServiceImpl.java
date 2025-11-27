@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -40,7 +41,9 @@ public class AdministradorServiceImpl implements AdministradorService {
             case "PROFESOR":
                 Profesor profesor = Profesor.builder()
                         .nombre(datos.getNombre())
+                        .nombre2(datos.getNombre2())
                         .apellido(datos.getApellido())
+                        .apellido2(datos.getApellido2())
                         .cedula(datos.getCedula())
                         .correoElectronico(datos.getCorreoElectronico())
                         .fechaNacimiento(datos.getFechaNacimiento())
@@ -52,7 +55,9 @@ public class AdministradorServiceImpl implements AdministradorService {
             case "ACUDIENTE":
                 Acudiente acudiente = Acudiente.builder()
                         .nombre(datos.getNombre())
+                        .nombre2(datos.getNombre2())
                         .apellido(datos.getApellido())
+                        .apellido2(datos.getApellido2())
                         .cedula(datos.getCedula())
                         .correoElectronico(datos.getCorreoElectronico())
                         .fechaNacimiento(datos.getFechaNacimiento())
@@ -65,7 +70,9 @@ public class AdministradorServiceImpl implements AdministradorService {
             case "COORDINADOR":
                 Coordinador coordinador = Coordinador.builder()
                         .nombre(datos.getNombre())
+                        .nombre2(datos.getNombre2())
                         .apellido(datos.getApellido())
+                        .apellido2(datos.getApellido2())
                         .cedula(datos.getCedula())
                         .correoElectronico(datos.getCorreoElectronico())
                         .fechaNacimiento(datos.getFechaNacimiento())
@@ -78,7 +85,9 @@ public class AdministradorServiceImpl implements AdministradorService {
             case "DIRECTIVO":
                 Director director = Director.builder()
                         .nombre(datos.getNombre())
+                        .nombre2(datos.getNombre2())
                         .apellido(datos.getApellido())
+                        .apellido2(datos.getApellido2())
                         .cedula(datos.getCedula())
                         .correoElectronico(datos.getCorreoElectronico())
                         .fechaNacimiento(datos.getFechaNacimiento())
@@ -90,7 +99,9 @@ public class AdministradorServiceImpl implements AdministradorService {
             case "ADMINISTRADOR":
                 Administrador administrador = Administrador.builder()
                         .nombre(datos.getNombre())
+                        .nombre2(datos.getNombre2())
                         .apellido(datos.getApellido())
+                        .apellido2(datos.getApellido2())
                         .cedula(datos.getCedula())
                         .correoElectronico(datos.getCorreoElectronico())
                         .fechaNacimiento(datos.getFechaNacimiento())
@@ -113,11 +124,21 @@ public class AdministradorServiceImpl implements AdministradorService {
         return convertirAUsuarioDTO(usuario);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<UsuarioDTO> listarTodosLosUsuarios() {
+        return usuarioRepository.findAll().stream()
+                .map(this::convertirAUsuarioDTO)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     private UsuarioDTO convertirAUsuarioDTO(Usuario usuario) {
         return UsuarioDTO.builder()
                 .idUsuario(usuario.getIdUsuario())
                 .nombre(usuario.getNombre())
+                .nombre2(usuario.getNombre2())
                 .apellido(usuario.getApellido())
+                .apellido2(usuario.getApellido2())
                 .cedula(usuario.getCedula())
                 .correoElectronico(usuario.getCorreoElectronico())
                 .fechaNacimiento(usuario.getFechaNacimiento())

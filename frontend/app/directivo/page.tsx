@@ -1,8 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, ChevronRight, Users } from "lucide-react"
+import { ChevronDown, ChevronRight, Users, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/auth-context"
 
 interface Group {
   id: string
@@ -47,6 +50,8 @@ const grades: Grade[] = [
 ]
 
 export default function DirectivoPage() {
+  const router = useRouter()
+  const { logout } = useAuth()
   const [expandedGrades, setExpandedGrades] = useState<string[]>([])
 
   const toggleGrade = (gradeId: string) => {
@@ -56,6 +61,26 @@ export default function DirectivoPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-beige-50 via-beige-100 to-beige-200">
       <div className="mx-auto max-w-5xl p-10">
+        {/* Header con logout */}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => router.push("/")}
+              variant="ghost"
+              className="text-navy-700 hover:bg-navy-100/50 rounded-xl"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </div>
+          <Button
+            onClick={logout}
+            variant="outline"
+            className="border-2 border-burgundy-700 text-burgundy-700 hover:bg-burgundy-700 hover:text-white px-8 py-3 font-bold rounded-xl transition-all duration-300"
+          >
+            Cerrar Sesión
+          </Button>
+        </div>
+
         <div className="rounded-3xl bg-white/95 backdrop-blur-sm p-12 shadow-[0_20px_60px_-15px_rgba(37,52,64,0.3)] border border-beige-300/50">
           <h1 className="mb-12 text-center text-4xl font-bold text-navy-800 tracking-tight">GRADOS Y GRUPOS</h1>
 

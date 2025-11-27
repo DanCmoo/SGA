@@ -16,16 +16,25 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getTokenUsuario().getRol()));
+        if (usuario.getTokenUsuario() == null) {
+            throw new IllegalStateException("Usuario sin token de autenticación");
+        }
+        return List.of(new SimpleGrantedAuthority(usuario.getTokenUsuario().getRol()));
     }
 
     @Override
     public String getPassword() {
+        if (usuario.getTokenUsuario() == null) {
+            throw new IllegalStateException("Usuario sin token de autenticación");
+        }
         return usuario.getTokenUsuario().getContrasena();
     }
 
     @Override
     public String getUsername() {
+        if (usuario.getCorreoElectronico() == null) {
+            throw new IllegalStateException("Usuario sin correo electrónico");
+        }
         return usuario.getCorreoElectronico();
     }
 

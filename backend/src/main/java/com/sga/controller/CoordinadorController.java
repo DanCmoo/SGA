@@ -14,7 +14,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/coordinador")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('COORDINADOR')")
+@PreAuthorize("hasAuthority('COORDINADOR')")
 public class CoordinadorController {
 
     private final AdmisionesService admisionesService;

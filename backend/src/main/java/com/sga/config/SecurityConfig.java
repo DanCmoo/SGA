@@ -43,7 +43,9 @@ public class SecurityConfig {
                             "/usuarios/login", 
                             "/api/usuarios/login",
                             "/usuarios/health",
-                            "/api/usuarios/health"
+                            "/api/usuarios/health",
+                            "/admisiones/preinscripcion",
+                            "/api/admisiones/preinscripcion"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

@@ -7,6 +7,7 @@ import { AchievementsModal } from "@/components/achievements-modal"
 import { AchievementsHistoryModal } from "@/components/achievements-history-modal"
 import { useToast } from "@/components/toast"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
 
 const teacherData = {
   name: "María González",
@@ -29,6 +30,7 @@ export default function ProfesorPage() {
   const [selectedStudentName, setSelectedStudentName] = useState("")
   const { showToast, ToastContainer } = useToast()
   const router = useRouter()
+  const { logout } = useAuth()
 
   const handleAction = (studentId: number, type: "view" | "document" | "star") => {
     setSelectedStudent(studentId)
@@ -59,7 +61,7 @@ export default function ProfesorPage() {
           <Button
             onClick={() => {
               showToast("Cerrando sesión...", "info")
-              setTimeout(() => router.push("/login"), 1000)
+              setTimeout(() => logout(), 1000)
             }}
             className="bg-white/10 backdrop-blur-sm border-2 border-white text-white hover:bg-white hover:text-navy-700 transition-all duration-300 rounded-xl px-6 py-3 font-semibold shadow-lg shadow-white/10 hover:scale-105 flex items-center gap-2"
           >

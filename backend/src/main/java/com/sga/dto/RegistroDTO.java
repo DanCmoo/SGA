@@ -13,7 +13,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class RegistroDTO {
     private String nombre;
+    private String nombre2;
     private String apellido;
+    private String apellido2;
     private String cedula;
     private String correoElectronico;
     private LocalDate fechaNacimiento;

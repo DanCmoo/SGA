@@ -13,9 +13,10 @@ import java.util.UUID;
 @NoArgsConstructor
 public class GrupoDTO {
     private UUID idGrupo;
-    private String nombreGrupo;
+    private String nombre;
+    private UUID idGrado;
     private String nombreGrado;
-    private UUID idDirectorGrupo;
-    private String nombreDirectorGrupo;
+    private UUID idProfesor;
+    private String nombreProfesor;
     private Integer cantidadEstudiantes;
 }

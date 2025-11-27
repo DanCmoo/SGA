@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -57,29 +59,44 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new IllegalStateException("El usuario no tiene credenciales configuradas");
         }
 
+        log.debug("Token de usuario encontrado. Rol: {}", usuario.getTokenUsuario().getRol());
+        
         // Validar contraseña
+        log.debug("Validando contraseña para usuario: {}", credenciales.getCorreoElectronico());
         if (!passwordEncoder.matches(credenciales.getContrasena(), usuario.getTokenUsuario().getContrasena())) {
             log.warn("Contraseña incorrecta para el usuario: {}", credenciales.getCorreoElectronico());
             throw new CredencialesInvalidasException("La contraseña es incorrecta");
         }
 
+        log.debug("Contraseña validada correctamente");
+        
         // Generar token JWT
+        log.debug("Generando token JWT para usuario: {}", usuario.getCorreoElectronico());
         CustomUserDetails userDetails = new CustomUserDetails(usuario);
+        log.debug("CustomUserDetails creado");
+        
         String token = jwtService.generateToken(userDetails);
+        log.debug("Token JWT generado exitosamente: {}", token.substring(0, 20) + "...");
+        
+        // Construir DTO del usuario
+        log.debug("Convirtiendo usuario a DTO");
+        UsuarioDTO usuarioDTO = convertirAUsuarioDTO(usuario);
+        log.debug("Usuario convertido a DTO exitosamente");
         
         log.info("Autenticación exitosa para el usuario: {} con rol: {}", 
                 usuario.getCorreoElectronico(), usuario.getTokenUsuario().getRol());
 
-        // Construir DTO del usuario
-        UsuarioDTO usuarioDTO = convertirAUsuarioDTO(usuario);
-
         // Retornar token de autenticación
-        return TokenDTO.builder()
+        log.debug("Construyendo respuesta TokenDTO");
+        TokenDTO response = TokenDTO.builder()
                 .token(token)
                 .tipo("Bearer")
                 .expiracion(LocalDateTime.now().plusDays(1))
                 .usuario(usuarioDTO)
                 .build();
+        log.debug("TokenDTO construido exitosamente");
+        
+        return response;
     }
 
     @Override
@@ -155,11 +172,22 @@ public class UsuarioServiceImpl implements UsuarioService {
         return UsuarioDTO.builder()
                 .idUsuario(usuario.getIdUsuario())
                 .nombre(usuario.getNombre())
+                .nombre2(usuario.getNombre2())
                 .apellido(usuario.getApellido())
+                .apellido2(usuario.getApellido2())
                 .cedula(usuario.getCedula())
                 .correoElectronico(usuario.getCorreoElectronico())
                 .fechaNacimiento(usuario.getFechaNacimiento())
                 .rol(usuario.getTokenUsuario().getRol())
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UsuarioDTO> listarProfesores() {
+        log.info("Listando todos los profesores");
+        return usuarioRepository.findByTokenUsuarioRol("PROFESOR").stream()
+                .map(this::convertirAUsuarioDTO)
+                .collect(Collectors.toList());
     }
 }

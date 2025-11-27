@@ -9,12 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMINISTRADOR')")
+@PreAuthorize("hasAuthority('ADMINISTRADOR')")
 public class AdministradorController {
 
     private final AdministradorService administradorService;
@@ -28,5 +29,10 @@ public class AdministradorController {
     @GetMapping("/usuarios/{id}")
     public ResponseEntity<UsuarioDTO> consultarUsuario(@PathVariable UUID id) {
         return ResponseEntity.ok(administradorService.consultarPorId(id));
+    }
+
+    @GetMapping("/usuarios")
+    public ResponseEntity<List<UsuarioDTO>> listarUsuarios() {
+        return ResponseEntity.ok(administradorService.listarTodosLosUsuarios());
     }
 }

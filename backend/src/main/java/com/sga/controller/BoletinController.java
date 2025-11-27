@@ -19,7 +19,7 @@ public class BoletinController {
     private final BoletinService boletinService;
 
     @GetMapping("/{id}/descarga")
-    @PreAuthorize("hasRole('ACUDIENTE') or hasRole('PROFESOR') or hasRole('DIRECTOR')")
+    @PreAuthorize("hasAuthority('ACUDIENTE') or hasAuthority('PROFESOR') or hasAuthority('DIRECTOR')")
     public ResponseEntity<byte[]> descargarBoletin(@PathVariable UUID id) {
         byte[] pdf = boletinService.generarArchivoPDFBoletin(id);
         
@@ -30,7 +30,7 @@ public class BoletinController {
     }
 
     @PostMapping("/generar")
-    @PreAuthorize("hasRole('PROFESOR')")
+    @PreAuthorize("hasAuthority('PROFESOR')")
     public ResponseEntity<BoletinDTO> generarBoletin(
             @RequestParam UUID idEstudiante,
             @RequestParam String periodo) {

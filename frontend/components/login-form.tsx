@@ -2,24 +2,66 @@
 
 import type React from "react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { GraduationCap, Lock, User } from "lucide-react"
+import { GraduationCap, Lock, Mail, AlertCircle } from "lucide-react"
 import { FirstTimeModal } from "./first-time-modal"
+import { useAuth } from "@/contexts/auth-context"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function LoginForm() {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
+  const router = useRouter()
+  const { login, error, clearError } = useAuth()
+  
+  const [correoElectronico, setCorreoElectronico] = useState("")
+  const [contrasena, setContrasena] = useState("")
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [usuarioId, setUsuarioId] = useState<string>("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Login attempt:", { username, password })
-    const isFirstTime = true
-    if (isFirstTime) {
-      setShowFirstTimeModal(true)
+    clearError()
+    setIsLoading(true)
+
+    try {
+      const response = await login({
+        correoElectronico,
+        contrasena,
+      })
+
+      // Verificar si es primera vez (datos personales incompletos)
+      const usuario = response.usuario
+      const esPrimeraVez = !usuario.nombre || !usuario.cedula || !usuario.fechaNacimiento
+
+      if (esPrimeraVez) {
+        setUsuarioId(usuario.idUsuario)
+        setShowFirstTimeModal(true)
+      } else {
+        // Redirigir según el rol
+        redirectByRole(usuario.rol)
+      }
+    } catch (err) {
+      // El error ya está manejado en el contexto
+      console.error('Error de autenticación:', err)
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  const redirectByRole = (rol: string) => {
+    const routes: Record<string, string> = {
+      ADMINISTRADOR: '/administrador',
+      COORDINADOR: '/coordinador',
+      DIRECTOR: '/directivo',
+      PROFESOR: '/profesor',
+      ACUDIENTE: '/acudiente',
+    }
+
+    const route = routes[rol] || '/'
+    router.push(route)
   }
 
   return (
@@ -39,53 +81,68 @@ export function LoginForm() {
               <h2 className="text-3xl font-bold text-navy-700 mb-3">Bienvenido</h2>
               <p className="text-brown-600 text-base">Ingresa tus credenciales para continuar</p>
             </div>
+
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-3">
-                <Label htmlFor="username" className="text-sm font-semibold text-navy-700">
-                  Usuario
+                <Label htmlFor="correoElectronico" className="text-sm font-semibold text-navy-700">
+                  Correo Electrónico
                 </Label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brown-500 transition-colors group-focus-within:text-navy-600" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brown-500 transition-colors group-focus-within:text-navy-600" />
                   <Input
-                    id="username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    id="correoElectronico"
+                    type="email"
+                    value={correoElectronico}
+                    onChange={(e) => setCorreoElectronico(e.target.value)}
                     className="pl-12 h-14 border-2 border-beige-300 rounded-xl focus-visible:border-navy-500 focus-visible:ring-4 focus-visible:ring-navy-500/10 transition-all duration-300 bg-white hover:border-brown-400 shadow-sm shadow-beige-200/50"
-                    placeholder="Ingresa tu usuario"
+                    placeholder="ejemplo@fis.edu.co"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
               <div className="space-y-3">
-                <Label htmlFor="password" className="text-sm font-semibold text-navy-700">
+                <Label htmlFor="contrasena" className="text-sm font-semibold text-navy-700">
                   Contraseña
                 </Label>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brown-500 transition-colors group-focus-within:text-navy-600" />
                   <Input
-                    id="password"
+                    id="contrasena"
                     type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={contrasena}
+                    onChange={(e) => setContrasena(e.target.value)}
                     className="pl-12 h-14 border-2 border-beige-300 rounded-xl focus-visible:border-navy-500 focus-visible:ring-4 focus-visible:ring-navy-500/10 transition-all duration-300 bg-white hover:border-brown-400 shadow-sm shadow-beige-200/50"
                     placeholder="Ingresa tu contraseña"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-coral-500 to-burgundy-600 hover:from-burgundy-600 hover:to-coral-500 text-white font-bold text-lg h-14 rounded-xl shadow-lg shadow-coral-500/30 hover:shadow-xl hover:shadow-coral-500/40 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] mt-8"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-coral-500 to-burgundy-600 hover:from-burgundy-600 hover:to-coral-500 text-white font-bold text-lg h-14 rounded-xl shadow-lg shadow-coral-500/30 hover:shadow-xl hover:shadow-coral-500/40 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] mt-8 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Ingresar
+                {isLoading ? 'Ingresando...' : 'Ingresar'}
               </Button>
             </form>
           </div>
         </div>
-        {/* </CHANGE> */}
       </div>
-      <FirstTimeModal isOpen={showFirstTimeModal} onClose={() => setShowFirstTimeModal(false)} />
+      <FirstTimeModal 
+        isOpen={showFirstTimeModal} 
+        onClose={() => setShowFirstTimeModal(false)}
+        usuarioId={usuarioId}
+        onSuccess={redirectByRole}
+      />
     </>
   )
 }

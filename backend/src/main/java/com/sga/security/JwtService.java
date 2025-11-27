@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@Slf4j
 public class JwtService {
 
     @Value("${jwt.secret}")
@@ -34,11 +36,17 @@ public class JwtService {
     }
 
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        log.debug("Generando token JWT - iniciando");
+        String token = generateToken(new HashMap<>(), userDetails);
+        log.debug("Token JWT generado correctamente");
+        return token;
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        return buildToken(extraClaims, userDetails, jwtExpiration);
+        log.debug("Generando token con claims extras");
+        String token = buildToken(extraClaims, userDetails, jwtExpiration);
+        log.debug("buildToken completado");
+        return token;
     }
 
     private String buildToken(
@@ -46,14 +54,22 @@ public class JwtService {
             UserDetails userDetails,
             long expiration
     ) {
-        return Jwts
+        log.debug("buildToken - obteniendo username");
+        String username = userDetails.getUsername();
+        log.debug("buildToken - username obtenido: {}", username);
+        
+        log.debug("buildToken - construyendo JWT");
+        String token = Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
+                .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
+        log.debug("buildToken - JWT construido exitosamente");
+        
+        return token;
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
@@ -71,7 +87,7 @@ public class JwtService {
 
     private Claims extractAllClaims(String token) {
         return Jwts
-                .parserBuilder()
+                .parser()
                 .setSigningKey(getSignInKey())
                 .build()
                 .parseClaimsJws(token)

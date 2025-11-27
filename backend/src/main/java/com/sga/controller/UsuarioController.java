@@ -8,8 +8,10 @@ import com.sga.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -64,5 +66,19 @@ public class UsuarioController {
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Servidor funcionando correctamente");
+    }
+
+    /**
+     * Endpoint para obtener todos los profesores.
+     * Utilizado para asignar profesores a grupos.
+     * 
+     * @return Lista de profesores
+     */
+    @GetMapping("/profesores")
+    @PreAuthorize("hasAnyAuthority('COORDINADOR', 'ADMINISTRADOR')")
+    public ResponseEntity<List<UsuarioDTO>> listarProfesores() {
+        log.info("GET /usuarios/profesores - Listando profesores");
+        List<UsuarioDTO> profesores = usuarioService.listarProfesores();
+        return ResponseEntity.ok(profesores);
     }
 }

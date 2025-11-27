@@ -3,27 +3,91 @@
 import type React from "react"
 import { useState } from "react"
 import { X } from "lucide-react"
+import { api } from "@/lib/api"
 
 interface PreinscriptionModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
+interface FormData {
+  nombre1Acudiente: string
+  nombre2Acudiente: string
+  apellido1Acudiente: string
+  apellido2Acudiente: string
+  cedulaAcudiente: string
+  fechaNacimientoAcudiente: string
+  telefonoAcudiente: string
+  correoAcudiente: string
+  nombre1Estudiante: string
+  nombre2Estudiante: string
+  apellido1Estudiante: string
+  apellido2Estudiante: string
+  fechaNacimiento: string
+  documentoIdentidad: string
+  gradoSolicitado: string
+}
+
 export function PreinscriptionModal({ isOpen, onClose }: PreinscriptionModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState<FormData>({
+    nombre1Acudiente: "",
+    nombre2Acudiente: "",
+    apellido1Acudiente: "",
+    apellido2Acudiente: "",
+    cedulaAcudiente: "",
+    fechaNacimientoAcudiente: "",
+    telefonoAcudiente: "",
+    correoAcudiente: "",
+    nombre1Estudiante: "",
+    nombre2Estudiante: "",
+    apellido1Estudiante: "",
+    apellido2Estudiante: "",
+    fechaNacimiento: "",
+    documentoIdentidad: "",
+    gradoSolicitado: "",
+  })
 
   if (!isOpen) return null
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    })
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    console.log("Form submitted")
-    setIsSubmitting(false)
-    onClose()
+    try {
+      await api.post("/admisiones/preinscripcion", formData)
+      alert("Preinscripción enviada exitosamente. Pronto nos comunicaremos contigo.")
+      onClose()
+      setFormData({
+        nombre1Acudiente: "",
+        nombre2Acudiente: "",
+        apellido1Acudiente: "",
+        apellido2Acudiente: "",
+        cedulaAcudiente: "",
+        fechaNacimientoAcudiente: "",
+        telefonoAcudiente: "",
+        correoAcudiente: "",
+        nombre1Estudiante: "",
+        nombre2Estudiante: "",
+        apellido1Estudiante: "",
+        apellido2Estudiante: "",
+        fechaNacimiento: "",
+        documentoIdentidad: "",
+        gradoSolicitado: "",
+      })
+    } catch (error) {
+      console.error("Error al enviar preinscripción:", error)
+      alert("Error al enviar la preinscripción. Por favor intenta de nuevo.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
   // </CHANGE>
 
@@ -51,26 +115,72 @@ export function PreinscriptionModal({ isOpen, onClose }: PreinscriptionModalProp
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
                   type="text"
-                  placeholder="Nombre completo"
+                  name="nombre1Acudiente"
+                  value={formData.nombre1Acudiente}
+                  onChange={handleChange}
+                  placeholder="Primer nombre"
                   className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
                   required
                 />
                 <input
                   type="text"
+                  name="nombre2Acudiente"
+                  value={formData.nombre2Acudiente}
+                  onChange={handleChange}
+                  placeholder="Segundo nombre (opcional)"
+                  className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
+                />
+                <input
+                  type="text"
+                  name="apellido1Acudiente"
+                  value={formData.apellido1Acudiente}
+                  onChange={handleChange}
+                  placeholder="Primer apellido"
+                  className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
+                  required
+                />
+                <input
+                  type="text"
+                  name="apellido2Acudiente"
+                  value={formData.apellido2Acudiente}
+                  onChange={handleChange}
+                  placeholder="Segundo apellido (opcional)"
+                  className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
+                />
+                <input
+                  type="text"
+                  name="cedulaAcudiente"
+                  value={formData.cedulaAcudiente}
+                  onChange={handleChange}
                   placeholder="Identificación"
                   className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
                   required
                 />
                 <input
+                  type="date"
+                  name="fechaNacimientoAcudiente"
+                  value={formData.fechaNacimientoAcudiente}
+                  onChange={handleChange}
+                  placeholder="Fecha de nacimiento"
+                  className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
+                  required
+                />
+                <input
                   type="tel"
+                  name="telefonoAcudiente"
+                  value={formData.telefonoAcudiente}
+                  onChange={handleChange}
                   placeholder="Teléfono"
                   className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
                   required
                 />
                 <input
                   type="email"
+                  name="correoAcudiente"
+                  value={formData.correoAcudiente}
+                  onChange={handleChange}
                   placeholder="Correo electrónico"
-                  className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
+                  className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500 md:col-span-2"
                   required
                 />
               </div>
@@ -81,28 +191,68 @@ export function PreinscriptionModal({ isOpen, onClose }: PreinscriptionModalProp
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
                   type="text"
-                  placeholder="Nombre completo"
+                  name="nombre1Estudiante"
+                  value={formData.nombre1Estudiante}
+                  onChange={handleChange}
+                  placeholder="Primer nombre"
                   className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
                   required
                 />
                 <input
+                  type="text"
+                  name="nombre2Estudiante"
+                  value={formData.nombre2Estudiante}
+                  onChange={handleChange}
+                  placeholder="Segundo nombre (opcional)"
+                  className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
+                />
+                <input
+                  type="text"
+                  name="apellido1Estudiante"
+                  value={formData.apellido1Estudiante}
+                  onChange={handleChange}
+                  placeholder="Primer apellido"
+                  className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
+                  required
+                />
+                <input
+                  type="text"
+                  name="apellido2Estudiante"
+                  value={formData.apellido2Estudiante}
+                  onChange={handleChange}
+                  placeholder="Segundo apellido (opcional)"
+                  className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
+                />
+                <input
                   type="date"
+                  name="fechaNacimiento"
+                  value={formData.fechaNacimiento}
+                  onChange={handleChange}
                   placeholder="Fecha de nacimiento"
                   className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
                   required
                 />
                 <input
                   type="text"
-                  placeholder="Grado a cursar"
-                  className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
-                  required
-                />
-                <input
-                  type="text"
+                  name="documentoIdentidad"
+                  value={formData.documentoIdentidad}
+                  onChange={handleChange}
                   placeholder="Documento de identidad"
                   className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500"
                   required
                 />
+                <select
+                  name="gradoSolicitado"
+                  value={formData.gradoSolicitado}
+                  onChange={handleChange}
+                  className="border-2 border-beige-300 rounded-xl px-4 py-3 focus:outline-none focus:border-navy-600 focus:ring-2 focus:ring-navy-600/20 transition-all duration-200 hover:border-brown-500 md:col-span-2"
+                  required
+                >
+                  <option value="">Seleccionar grado</option>
+                  <option value="PARVULOS">Párvulos</option>
+                  <option value="CAMINADORES">Caminadores</option>
+                  <option value="PRE-JARDIN">Pre-jardín</option>
+                </select>
               </div>
             </div>
 

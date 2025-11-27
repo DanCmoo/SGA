@@ -14,7 +14,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/directivo")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('DIRECTOR') or hasRole('DIRECTIVO')")
+@PreAuthorize("hasAuthority('DIRECTOR') or hasAuthority('DIRECTIVO')")
 public class DirectivoController {
 
     private final DirectivoService directivoService;

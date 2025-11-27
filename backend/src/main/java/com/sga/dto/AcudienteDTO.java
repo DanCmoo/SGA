@@ -15,7 +15,9 @@ import java.util.UUID;
 public class AcudienteDTO {
     private UUID idAcudiente;
     private String nombre;
+    private String nombre2;
     private String apellido;
+    private String apellido2;
     private String correoElectronico;
     private String telefono;
     private Boolean estado;

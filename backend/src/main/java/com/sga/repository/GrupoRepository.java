@@ -9,6 +9,6 @@ import java.util.UUID;
 
 @Repository
 public interface GrupoRepository extends JpaRepository<Grupo, UUID> {
-    List<Grupo> findByGradoIdGrado(UUID idGrado);
+    List<Grupo> findByGrado_IdGrado(UUID idGrado);
     List<Grupo> findByGradoNombreGrado(String nombreGrado);
 }

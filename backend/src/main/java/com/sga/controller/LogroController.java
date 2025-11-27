@@ -18,7 +18,7 @@ public class LogroController {
     private final LogroService logroService;
 
     @GetMapping("/estudiante/{id}/historico")
-    @PreAuthorize("hasRole('PROFESOR') or hasRole('ACUDIENTE') or hasRole('DIRECTOR')")
+    @PreAuthorize("hasAuthority('PROFESOR') or hasAuthority('ACUDIENTE') or hasAuthority('DIRECTOR')")
     public ResponseEntity<List<EvaluacionDTO>> mostrarHistoricoLogros(@PathVariable UUID id) {
         return ResponseEntity.ok(logroService.mostrarHistoricoLogros(id));
     }

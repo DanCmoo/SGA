@@ -15,7 +15,9 @@ import java.util.UUID;
 public class ProfesorDTO {
     private UUID idProfesor;
     private String nombre;
+    private String nombre2;
     private String apellido;
+    private String apellido2;
     private String correoElectronico;
     private String especialidad;
     private List<GrupoDTO> gruposAsignados;

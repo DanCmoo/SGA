@@ -1,5 +1,6 @@
 package com.sga.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,5 +29,6 @@ public class Token_Usuario {
     private String rol;
 
     @OneToOne(mappedBy = "tokenUsuario")
+    @JsonBackReference
     private Usuario usuario;
 }

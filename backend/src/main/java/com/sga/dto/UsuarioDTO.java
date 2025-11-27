@@ -15,7 +15,9 @@ import java.util.UUID;
 public class UsuarioDTO {
     private UUID idUsuario;
     private String nombre;
+    private String nombre2;
     private String apellido;
+    private String apellido2;
     private String cedula;
     private String correoElectronico;
     private LocalDate fechaNacimiento;

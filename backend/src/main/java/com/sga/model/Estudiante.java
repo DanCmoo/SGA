@@ -26,8 +26,14 @@ public class Estudiante {
     @Column(name = "nombre", nullable = false)
     private String nombre;
 
+    @Column(name = "nombre2")
+    private String nombre2;
+
     @Column(name = "apellido", nullable = false)
     private String apellido;
+
+    @Column(name = "apellido2")
+    private String apellido2;
 
     @Column(name = "numero_documento", nullable = false, unique = true)
     private String numeroDocumento;

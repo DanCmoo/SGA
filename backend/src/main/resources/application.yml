@@ -21,9 +21,15 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data-init.sql
+      continue-on-error: true
 
 jwt:
-  secret: your-secret-key-change-this-in-production-minimum-256-bits
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970337336763979244226452948404D635166546A576E5A7234753778214125442A
   expiration: 86400000
 
 logging:
