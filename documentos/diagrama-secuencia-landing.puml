@@ -1,0 +1,158 @@
+@startuml Diagrama de Secuencia - Landing Page SGA
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam sequence {
+    ArrowColor #2C3E50
+    ActorBorderColor #34495E
+    ActorBackgroundColor #ECF0F1
+    ParticipantBorderColor #3498DB
+    ParticipantBackgroundColor #EBF5FB
+    LifeLineBorderColor #BDC3C7
+    BoxBorderColor #95A5A6
+}
+
+actor "Visitante" as visitor
+participant "Next.js Server\n(SSR)" as nextServer #E8F8F5
+participant "Middleware\n(Edge Runtime)" as middleware #FDF2E9
+participant "RootLayout\n(layout.tsx)" as rootLayout #D5F4E6
+participant "HomePage\n(page.tsx)" as homePage #E8F6F3
+participant "Navigation\n(Component)" as navigation #EBF5FB
+participant "Hero\n(Component)" as hero #F4ECF7
+participant "AuthProvider\n(Context)" as authProvider #F8E8F5
+participant "Browser\n(Client)" as browser #FADBD8
+
+title Despliegue Inicial de Contenido Web - Sistema de Gestión Académica
+
+== Fase 1: Solicitud Inicial ==
+visitor -> browser: Ingresa URL\nhttp://localhost:3000
+activate browser
+browser -> nextServer: GET /\nHeaders: User-Agent, Accept
+activate nextServer
+note right of nextServer: Next.js 14 App Router\nServer-Side Rendering
+
+== Fase 2: Middleware de Enrutamiento ==
+nextServer -> middleware: middleware(request)
+activate middleware
+middleware -> middleware: const { pathname } = request.nextUrl\npathname = "/"
+
+middleware -> middleware: Verifica si es ruta pública\npublicPaths.includes("/") → true
+note right of middleware: Rutas públicas:\n['/login', '/']
+
+middleware -> middleware: No requiere autenticación\nreturn NextResponse.next()
+middleware --> nextServer: Continúa sin redirección
+deactivate middleware
+
+== Fase 3: Renderizado del Layout Root ==
+nextServer -> rootLayout: RootLayout({ children })
+activate rootLayout
+rootLayout -> rootLayout: Carga metadata:\ntitle: "Sistema de Gestión Académica"\ndescription: "Sistema integral..."
+rootLayout -> rootLayout: Inicializa fonts:\nGeist, Geist_Mono
+
+rootLayout -> rootLayout: Construye estructura HTML:\n<html lang="es">\n<body className="font-sans antialiased">
+
+rootLayout -> authProvider: <AuthProvider>
+activate authProvider
+authProvider -> authProvider: Crea contexto de autenticación\nconst [user, setUser] = useState(null)\nconst [token, setToken] = useState(null)\nconst [isLoading, setIsLoading] = useState(true)
+
+authProvider -> authProvider: useEffect(() => {\n  const currentUser = localStorage.getItem('user_data')\n  const currentToken = localStorage.getItem('auth_token')\n  setUser(null) // No hay usuario\n  setIsLoading(false)\n})
+note right of authProvider: En primera visita:\nno hay datos en localStorage
+
+authProvider --> rootLayout: Context Provider iniciado
+deactivate authProvider
+
+rootLayout -> homePage: Renderiza {children}
+note right of rootLayout: children = HomePage component
+
+== Fase 4: Renderizado de HomePage ==
+activate homePage
+homePage -> homePage: return (\n  <div className="min-h-screen bg-[#D5BB93]">\n)
+
+homePage -> navigation: <Navigation />
+activate navigation
+
+== Fase 5: Construcción del Navigation ==
+navigation -> navigation: const [isModalOpen, setIsModalOpen] = useState(false)
+
+navigation -> navigation: Renderiza estructura:\n- Logo del colegio\n- Nombre "Colegio Excelencia"\n- Botones de navegación
+
+navigation -> navigation: <Link href="/login">\n  "Login"\n</Link>
+
+navigation -> navigation: <button onClick={() => setIsModalOpen(true)}>\n  "Preinscríbete"\n</button>
+
+navigation --> homePage: JSX del Navigation\ncon eventos onClick preparados
+deactivate navigation
+
+homePage -> hero: <Hero />
+activate hero
+
+== Fase 6: Construcción del Hero ==
+hero -> hero: Renderiza secciones:\n1. Hero Header con título\n2. Misión y Visión\n3. Valores (grid 4x2)\n4. Estadísticas del colegio
+
+hero -> hero: Hero Header:\n<div className="bg-gradient-to-br from-navy-600...">\n  <h1>Colegio Excelencia Académica</h1>\n  <p>Formando líderes del mañana</p>\n</div>
+
+hero -> hero: Misión:\n- Icono con animación hover\n- Descripción de la misión educativa
+
+hero -> hero: Visión:\n- Icono de visión\n- Objetivos institucionales
+
+hero -> hero: Valores:\nmap(["Respeto", "Responsabilidad", ...], valor => {\n  return <div className="hover:scale-105">valor</div>\n})
+
+hero -> hero: Estadísticas:\n- 25+ Años de experiencia\n- 500+ Estudiantes activos\n- 50+ Docentes calificados\n- 95% Índice de satisfacción
+
+hero --> homePage: JSX completo del Hero\ncon estilos y animaciones
+deactivate hero
+
+homePage --> rootLayout: JSX completo de HomePage
+deactivate homePage
+
+rootLayout --> nextServer: HTML completo renderizado\n+ React hydration scripts
+deactivate rootLayout
+
+== Fase 7: Respuesta HTTP ==
+nextServer -> nextServer: Genera HTML final:\n<!DOCTYPE html>\n<html lang="es">\n  <head>\n    <meta charset="utf-8" />\n    <title>Sistema de Gestión Académica</title>\n    <link rel="stylesheet" href="/_next/static/css/..." />\n  </head>\n  <body>\n    <div id="__next">...</div>\n    <script src="/_next/static/chunks/..."></script>\n  </body>\n</html>
+
+nextServer --> browser: HTTP 200 OK\nContent-Type: text/html\nHTML + CSS + JS bundles
+deactivate nextServer
+
+== Fase 8: Renderizado en el Browser ==
+activate browser
+browser -> browser: Parsea HTML
+browser -> browser: Carga y aplica CSS:\n- Tailwind styles\n- Custom colors (navy, coral, beige)\n- Gradientes y sombras
+
+browser -> browser: Descarga JavaScript bundles:\n- React runtime\n- Next.js router\n- Componentes hidratados
+
+browser -> browser: React Hydration:\n- Adjunta event listeners\n- Inicializa estados\n- Activa interactividad
+
+browser -> browser: Renderiza contenido visual:\n✓ Navigation sticky top\n✓ Hero con gradientes\n✓ Cards de Misión/Visión\n✓ Grid de valores animados\n✓ Footer con estadísticas
+
+browser -> browser: Aplica animaciones CSS:\n- hover:scale-105\n- transition-all duration-300\n- shadow effects
+
+browser --> visitor: Página completamente cargada\ne interactiva
+deactivate browser
+
+== Fase 9: Interacción del Usuario ==
+visitor -> browser: Hover sobre botón "Preinscríbete"
+activate browser
+browser -> browser: Aplica clases hover:\ntransform scale-105\nshadow-xl
+browser --> visitor: Animación visual en tiempo real
+deactivate browser
+
+visitor -> browser: Click en "Login"
+activate browser
+browser -> browser: Next.js Router.push("/login")
+browser -> nextServer: GET /login
+note right of browser: Navegación client-side\nsin recargar página completa
+deactivate browser
+
+visitor -> browser: Click en "Preinscríbete"
+activate browser
+browser -> navigation: onClick={() => setIsModalOpen(true)}
+activate navigation
+navigation -> navigation: setIsModalOpen(true)
+navigation -> navigation: Renderiza <PreinscriptionModal\n  isOpen={true}\n  onClose={() => setIsModalOpen(false)}\n/>
+navigation --> browser: Modal aparece con overlay
+deactivate navigation
+browser --> visitor: Muestra formulario de preinscripción\ncon fade-in animation
+deactivate browser
+
+@enduml
