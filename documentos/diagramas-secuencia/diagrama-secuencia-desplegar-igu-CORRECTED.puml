@@ -1,0 +1,31 @@
+@startuml Desplegar_IGU_Corregido
+!theme plain
+skinparam backgroundColor #F5F5DC
+skinparam sequenceMessageAlign center
+
+participant ":HomePage" as HomePage
+participant ":Navigation" as Navigation
+participant ":Hero" as Hero
+
+HomePage -> Navigation: Renderiza <Navigation />
+activate Navigation
+
+Navigation -> Navigation: useState(false)
+note right: **Creación de objeto estado**\nisModalOpen
+
+Navigation -> Navigation: Renderiza elementos de navegación
+note right: Logo, botones login\ny preinscripción, modal
+
+Navigation --> HomePage: Navegación completa
+deactivate Navigation
+
+HomePage -> Hero: Renderiza <Hero />
+activate Hero
+
+Hero -> Hero: Renderiza contenido institucional
+note right: Header, Misión, Visión,\n8 valores, 4 estadísticas
+
+Hero --> HomePage: Contenido institucional completo
+deactivate Hero
+
+@enduml

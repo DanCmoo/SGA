@@ -1,0 +1,81 @@
+@startuml Desplegar_Contenidos_Web_Corregido
+!theme plain
+skinparam backgroundColor #F5F5DC
+skinparam sequenceMessageAlign center
+
+actor Usuario
+participant "Next.js\nFramework" as NextJS
+participant ":RootLayout" as RootLayout
+participant ":AuthProvider" as AuthProvider
+participant ":HomePage" as HomePage
+participant ":Navigation" as Navigation
+participant ":Hero" as Hero
+
+Usuario -> NextJS: Ingresa URL "/"
+activate NextJS
+note right: Petición HTTP GET\na la ruta raíz
+
+NextJS -> NextJS: Ejecuta middleware\nValida ruta pública
+note right: middleware.ts:\npublicPaths.some()
+
+NextJS -> RootLayout: Renderiza RootLayout(children)
+activate RootLayout
+note right: app/layout.tsx
+
+create AuthProvider
+RootLayout -> AuthProvider: Crea <AuthProvider>
+activate AuthProvider
+note right: contexts/auth-context.tsx
+
+AuthProvider -> AuthProvider: useState() x4\n(user, token, isLoading, error)
+note right: Inicializa estados
+
+AuthProvider -> AuthProvider: useEffect()\nCarga de localStorage
+note right: AuthService.getCurrentUser()\nlocalStorage.getItem('auth_token')
+
+AuthProvider -> AuthProvider: useRouter()
+note right: Hook de Next.js
+
+RootLayout -> HomePage: Renderiza {children}\n(HomePage)
+activate HomePage
+note right: app/page.tsx
+
+create Navigation
+HomePage -> Navigation: Renderiza <Navigation />
+activate Navigation
+note right: components/navigation.tsx\n("use client")
+
+Navigation -> Navigation: useState(false)
+note right: isModalOpen state
+
+Navigation --> Navigation: Retorna JSX inline:\n<nav>, <svg>, <Link>, <button>
+note right: Todo el contenido\nes JSX inline
+
+Navigation --> HomePage: Componente renderizado
+deactivate Navigation
+
+create Hero
+HomePage -> Hero: Renderiza <Hero />
+activate Hero
+note right: components/hero.tsx
+
+Hero --> Hero: Retorna JSX inline:\nheader, misión, visión,\nvalores.map(), stats.map()
+note right: Todo el contenido\nes JSX inline\ncon iteraciones
+
+Hero --> HomePage: Componente renderizado
+deactivate Hero
+
+HomePage --> RootLayout: Página completa
+deactivate HomePage
+
+AuthProvider --> RootLayout: Context Provider listo
+deactivate AuthProvider
+
+RootLayout --> NextJS: HTML completo
+deactivate RootLayout
+
+NextJS --> Usuario: Respuesta HTTP con HTML
+deactivate NextJS
+note left: Usuario ve la página\ncon todo el contenido
+
+@enduml

@@ -1,0 +1,170 @@
+@startuml Diagrama de Secuencia - Login SGA
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam sequence {
+    ArrowColor #2C3E50
+    ActorBorderColor #34495E
+    ActorBackgroundColor #ECF0F1
+    ParticipantBorderColor #3498DB
+    ParticipantBackgroundColor #EBF5FB
+    LifeLineBorderColor #BDC3C7
+    BoxBorderColor #95A5A6
+}
+
+actor "Usuario" as user
+participant "LoginForm\n(React)" as loginForm #E8F8F5
+participant "AuthService\n(TypeScript)" as authService #D5F4E6
+participant "DispatcherServlet\n(Spring MVC)" as dispatcher #FEF9E7
+participant "FilterChainProxy\n(Spring Security)" as filterChain #FDF2E9
+participant "UsuarioController\n(@RestController)" as controller #E8F6F3
+participant "UsuarioServiceImpl\n(@Service)" as service #EBF5FB
+participant "UsuarioRepository\n(JpaRepository)" as repo #F4ECF7
+participant "EntityManager\n(Hibernate)" as entityManager #F8E8F5
+participant "PostgreSQL\nDatabase" as db #FADBD8
+participant "BCryptPasswordEncoder" as bcrypt #F9EBEA
+participant "JwtService\n(JWT Builder)" as jwtService #E8F8F5
+
+title Flujo de Autenticación - Sistema de Gestión Académica
+
+== Fase 1: Envío de Credenciales ==
+user -> loginForm: Ingresa correo y contraseña\ny hace click en "Ingresar"
+activate loginForm
+loginForm -> loginForm: handleSubmit(e)\npreventDefault()
+
+loginForm -> authService: login(credenciales)
+activate authService
+authService -> authService: Crea CredencialesDTO\n{correoElectronico, contrasena}
+authService -> dispatcher: POST /api/usuarios/login\nBody: JSON, Headers: Content-Type
+deactivate authService
+deactivate loginForm
+
+== Fase 2: Procesamiento Spring Security ==
+activate dispatcher
+dispatcher -> filterChain: doFilter(request, response)
+activate filterChain
+filterChain -> filterChain: CorsFilter.doFilterInternal()\nAllow-Origin: localhost:3000
+filterChain -> filterChain: SecurityContextPersistenceFilter\nCrea SecurityContext vacío
+filterChain -> filterChain: AnonymousAuthenticationFilter\nCrea AnonymousAuthenticationToken
+filterChain --> dispatcher: Continúa cadena de filtros
+deactivate filterChain
+
+== Fase 3: Controller y Service Layer ==
+dispatcher -> controller: autenticar(@RequestBody credenciales)
+activate controller
+note right of controller: POST /usuarios/login\nLog: "Intento de autenticación..."
+
+controller -> service: autenticar(credenciales)
+activate service
+note right of service: @Transactional(readOnly = true)\nInicia transacción de solo lectura
+
+service -> service: Valida correo no vacío\nValida contraseña no vacía\nthrow IllegalArgumentException si fallan
+
+== Fase 4: Consulta a Base de Datos ==
+service -> repo: findByCorreoElectronico(email)
+activate repo
+note right of repo: Spring Data JPA genera\nimplementación en runtime
+
+repo -> entityManager: createQuery(JPQL)
+activate entityManager
+entityManager -> entityManager: Crea PreparedStatement
+entityManager -> db: SELECT u.*, t.*\nFROM usuario u\nLEFT JOIN token_usuario t ON u.id_token = t.id_token\nWHERE u.correo_electronico = ?
+activate db
+db --> entityManager: ResultSet con datos
+deactivate db
+
+entityManager -> entityManager: Mapea ResultSet a:\n- Token_Usuario entity\n- Usuario entity (abstract)\n- Coordinador/Profesor/etc (concrete)
+entityManager --> repo: Usuario entity poblado
+deactivate entityManager
+repo --> service: Optional<Usuario>
+deactivate repo
+
+alt Usuario no encontrado (Optional.empty)
+    service --> controller: throw UsuarioNoEncontradoException\n"No existe cuenta con este correo"
+    controller --> authService: 404 Not Found
+    authService --> loginForm: ApiException caught
+    loginForm --> user: Alert: "Usuario no encontrado"
+else Usuario encontrado (Optional.present)
+    
+    == Fase 5: Validación de Contraseña ==
+    service -> service: usuario.getTokenUsuario()
+    service -> bcrypt: matches(plainPassword, hashedPassword)
+    activate bcrypt
+    note right of bcrypt: BCryptPasswordEncoder.matches()
+    bcrypt -> bcrypt: Extrae salt del hash BD\nAplica BCrypt a password ingresada\nCompara hashes
+    bcrypt --> service: boolean resultado
+    deactivate bcrypt
+    
+    alt Contraseña incorrecta (false)
+        service --> controller: throw CredencialesInvalidasException\n"La contraseña es incorrecta"
+        controller --> authService: 401 Unauthorized
+        authService --> loginForm: ApiException caught
+        loginForm --> user: Alert: "Contraseña incorrecta"
+    else Contraseña correcta (true)
+        
+        == Fase 6: Generación de Token JWT ==
+        service -> service: new CustomUserDetails(usuario)
+        note right of service: Wrapper que implementa\nUserDetails de Spring Security
+        
+        service -> jwtService: generateToken(userDetails)
+        activate jwtService
+        jwtService -> jwtService: buildToken(extraClaims, userDetails, expiration)
+        jwtService -> jwtService: Jwts.builder()\n.setClaims(extraClaims)\n.setSubject(correoElectronico)\n.setIssuedAt(new Date())\n.setExpiration(now + 86400000ms)\n.signWith(Keys.hmacShaKeyFor(secret), HS256)\n.compact()
+        note right of jwtService: Secret desde application.yml\njwt.expiration: 86400000 (24h)
+        jwtService --> service: String token JWT
+        deactivate jwtService
+        
+        == Fase 7: Construcción de Respuesta ==
+        service -> service: convertirAUsuarioDTO(usuario)
+        note right of service: UsuarioDTO.builder()\n.idUsuario()\n.nombre(), .apellido()\n.cedula(), .correoElectronico()\n.fechaNacimiento()\n.rol(token.getRol())\n.build()
+        
+        service -> service: TokenDTO.builder()\n.token(jwtString)\n.tipo("Bearer")\n.expiracion(LocalDateTime.now().plusDays(1))\n.usuario(usuarioDTO)\n.build()
+        
+        service --> controller: return TokenDTO
+        deactivate service
+        note right of controller: Log: "Autenticación exitosa para\n{email} con rol {ROL}"
+        
+        controller --> dispatcher: ResponseEntity.ok(tokenDTO)
+        deactivate controller
+        
+        == Fase 8: Respuesta al Cliente ==
+        dispatcher -> dispatcher: ObjectMapper.writeValueAsString()\nSerializa TokenDTO a JSON
+        dispatcher --> authService: HTTP 200 OK\nJSON: {token, tipo, expiracion, usuario}
+        deactivate dispatcher
+        
+        == Fase 9: Almacenamiento y Redirección ==
+        activate authService
+        authService -> authService: setAuthToken(response.token)
+        authService -> authService: localStorage.setItem("auth_token", token)
+        authService -> authService: localStorage.setItem("user_data", JSON.stringify(usuario))
+        authService --> loginForm: return TokenDTO
+        deactivate authService
+        
+        activate loginForm
+        loginForm -> loginForm: const esPrimeraVez = \n!usuario.nombre || !usuario.cedula
+        
+        alt Primera vez (datos incompletos)
+            loginForm -> loginForm: setShowFirstTimeModal(true)
+            loginForm -> user: Muestra FirstTimeModal
+            activate user
+            user -> loginForm: Completa nombre, apellido,\ncédula, fecha de nacimiento
+            deactivate user
+            loginForm -> authService: actualizarDatosPersonales(id, datos)
+            activate authService
+            authService -> dispatcher: PUT /api/usuarios/{id}/datos-iniciales\nBody: RegistroDTO
+            dispatcher --> authService: 200 OK (UsuarioDTO)
+            authService -> authService: localStorage.setItem("user_data", updated)
+            authService --> loginForm: return UsuarioDTO
+            deactivate authService
+        end
+        
+        loginForm -> loginForm: redirectByRole(usuario.rol)
+        note right of loginForm: Switch según rol:\nCOORDINADOR → /coordinador\nADMINISTRADOR → /administrador\nDIRECTOR → /directivo\nPROFESOR → /profesor\nACUDIENTE → /acudiente
+        
+        loginForm -> loginForm: router.push(route)
+        loginForm --> user: Redirige a Dashboard\nsegún rol del usuario
+        deactivate loginForm
+    end
+end
+
+@enduml
