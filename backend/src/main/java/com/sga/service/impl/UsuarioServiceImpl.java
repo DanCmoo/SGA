@@ -1,11 +1,14 @@
 package com.sga.service.impl;
 
+import com.sga.dto.CambioContrasenaDTO;
 import com.sga.dto.CredencialesDTO;
 import com.sga.dto.RegistroDTO;
 import com.sga.dto.TokenDTO;
 import com.sga.dto.UsuarioDTO;
 import com.sga.exception.CredencialesInvalidasException;
 import com.sga.exception.UsuarioNoEncontradoException;
+import com.sga.model.Profesor;
+import com.sga.model.Token_Usuario;
 import com.sga.model.Usuario;
 import com.sga.repository.UsuarioRepository;
 import com.sga.security.JwtService;
@@ -93,6 +96,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .tipo("Bearer")
                 .expiracion(LocalDateTime.now().plusDays(1))
                 .usuario(usuarioDTO)
+                .requiereCambioContrasena(usuario.getTokenUsuario().getRequiereCambioContrasena())
                 .build();
         log.debug("TokenDTO construido exitosamente");
         
@@ -169,7 +173,7 @@ public class UsuarioServiceImpl implements UsuarioService {
      * Convierte una entidad Usuario a UsuarioDTO
      */
     private UsuarioDTO convertirAUsuarioDTO(Usuario usuario) {
-        return UsuarioDTO.builder()
+        UsuarioDTO.UsuarioDTOBuilder builder = UsuarioDTO.builder()
                 .idUsuario(usuario.getIdUsuario())
                 .nombre(usuario.getNombre())
                 .nombre2(usuario.getNombre2())
@@ -178,16 +182,73 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .cedula(usuario.getCedula())
                 .correoElectronico(usuario.getCorreoElectronico())
                 .fechaNacimiento(usuario.getFechaNacimiento())
-                .rol(usuario.getTokenUsuario().getRol())
-                .build();
+                .rol(usuario.getTokenUsuario().getRol());
+        
+        // Si es profesor, incluir información específica
+        if (usuario instanceof Profesor) {
+            Profesor profesor = (Profesor) usuario;
+            builder.profesor(UsuarioDTO.ProfesorInfoDTO.builder()
+                    .grupoAsignado(profesor.getGrupoAsignado())
+                    .build());
+        }
+        
+        return builder.build();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<UsuarioDTO> listarProfesores() {
-        log.info("Listando todos los profesores");
+        log.info("Listando profesores disponibles (sin grupo asignado)");
         return usuarioRepository.findByTokenUsuarioRol("PROFESOR").stream()
+                .filter(usuario -> {
+                    if (usuario instanceof Profesor) {
+                        Profesor profesor = (Profesor) usuario;
+                        // Solo incluir profesores sin grupo asignado
+                        return profesor.getGrupoAsignado() == null || profesor.getGrupoAsignado().isEmpty();
+                    }
+                    return false;
+                })
                 .map(this::convertirAUsuarioDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void cambiarContrasena(UUID idUsuario, CambioContrasenaDTO cambioContrasena) {
+        log.info("Cambiando contraseña para usuario: {}", idUsuario);
+
+        // Validaciones
+        if (cambioContrasena.getContrasenaNueva() == null || cambioContrasena.getContrasenaNueva().length() < 8) {
+            throw new IllegalArgumentException("La nueva contraseña debe tener al menos 8 caracteres");
+        }
+
+        if (!cambioContrasena.getContrasenaNueva().equals(cambioContrasena.getConfirmarContrasena())) {
+            throw new IllegalArgumentException("Las contraseñas no coinciden");
+        }
+
+        // Buscar usuario
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado"));
+
+        Token_Usuario token = usuario.getTokenUsuario();
+        if (token == null) {
+            throw new IllegalStateException("El usuario no tiene credenciales configuradas");
+        }
+
+        // Verificar contraseña actual si se proporcionó
+        if (cambioContrasena.getContrasenaActual() != null && !cambioContrasena.getContrasenaActual().isEmpty()) {
+            if (!passwordEncoder.matches(cambioContrasena.getContrasenaActual(), token.getContrasena())) {
+                throw new CredencialesInvalidasException("La contraseña actual es incorrecta");
+            }
+        }
+
+        // Actualizar contraseña y marcar como no requiere cambio
+        token.setContrasena(passwordEncoder.encode(cambioContrasena.getContrasenaNueva()));
+        token.setRequiereCambioContrasena(false);
+
+        // Spring Data JPA actualizará automáticamente por la relación
+        usuarioRepository.save(usuario);
+
+        log.info("Contraseña actualizada exitosamente para usuario: {}", idUsuario);
     }
 }

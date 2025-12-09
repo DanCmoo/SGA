@@ -6,8 +6,9 @@ export function Hero() {
         <div className="bg-gradient-to-br from-navy-600 via-navy-700 to-brown-600 text-white p-16 relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii4wNSIvPjwvZz48L3N2Zz4=')] opacity-20"></div>
           <div className="relative">
-            <h1 className="text-6xl md:text-7xl font-bold mb-6 tracking-tight">Colegio Excelencia Académica</h1>
-            <p className="text-2xl md:text-3xl text-beige-200 font-medium">Formando líderes del mañana</p>
+            <h1 className="text-6xl md:text-7xl font-bold mb-6 tracking-tight">FIS</h1>
+            <p className="text-2xl md:text-3xl text-beige-200 font-medium">Fundación Institución Salesiana</p>
+            <p className="text-xl text-coral-300 font-light mt-2">Formando líderes del mañana</p>
           </div>
         </div>
 

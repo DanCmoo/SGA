@@ -25,6 +25,43 @@ export class ApiException extends Error {
 }
 
 /**
+ * Obtiene el token de autenticación almacenado
+ */
+export function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('auth_token');
+}
+
+/**
+ * Guarda el token de autenticación
+ */
+export function setAuthToken(token: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('auth_token', token);
+}
+
+/**
+ * Elimina el token de autenticación
+ */
+export function removeAuthToken(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('user_data');
+}
+
+/**
+ * Crea headers de autenticación con el token Bearer
+ */
+export function getAuthHeaders(): HeadersInit {
+  const token = getAuthToken();
+  if (!token) return {};
+  
+  return {
+    'Authorization': `Bearer ${token}`,
+  };
+}
+
+/**
  * Realiza una petición HTTP al backend
  */
 async function fetchApi<T>(
@@ -37,6 +74,7 @@ async function fetchApi<T>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders(),
       ...options.headers,
     },
   };
@@ -127,40 +165,3 @@ export const api = {
       body: data ? JSON.stringify(data) : undefined,
     }),
 };
-
-/**
- * Obtiene el token de autenticación almacenado
- */
-export function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('auth_token');
-}
-
-/**
- * Guarda el token de autenticación
- */
-export function setAuthToken(token: string): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem('auth_token', token);
-}
-
-/**
- * Elimina el token de autenticación
- */
-export function removeAuthToken(): void {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem('auth_token');
-  localStorage.removeItem('user_data');
-}
-
-/**
- * Crea headers de autenticación con el token Bearer
- */
-export function getAuthHeaders(): HeadersInit {
-  const token = getAuthToken();
-  if (!token) return {};
-  
-  return {
-    'Authorization': `Bearer ${token}`,
-  };
-}

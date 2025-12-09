@@ -43,6 +43,11 @@ public class GrupoServiceImpl implements GrupoService {
         if (grupoCreacionDTO.getIdProfesor() != null) {
             profesor = profesorRepository.findById(grupoCreacionDTO.getIdProfesor())
                     .orElseThrow(() -> new ResourceNotFoundException("Profesor no encontrado con ID: " + grupoCreacionDTO.getIdProfesor()));
+            
+            // Verificar que el profesor no tenga ya un grupo asignado
+            if (profesor.getGrupoAsignado() != null && !profesor.getGrupoAsignado().isEmpty()) {
+                throw new IllegalStateException("El profesor ya tiene un grupo asignado");
+            }
         }
         
         Grupo grupo = Grupo.builder()
@@ -52,6 +57,13 @@ public class GrupoServiceImpl implements GrupoService {
                 .build();
         
         Grupo grupoGuardado = grupoRepository.save(grupo);
+        
+        // Actualizar el campo grupoAsignado del profesor
+        if (profesor != null) {
+            profesor.setGrupoAsignado(grupoGuardado.getIdGrupo().toString());
+            profesorRepository.save(profesor);
+        }
+        
         log.info("Grupo creado exitosamente con ID: {}", grupoGuardado.getIdGrupo());
         
         return convertirADTO(grupoGuardado);
@@ -149,13 +161,81 @@ public class GrupoServiceImpl implements GrupoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EstudianteDTO obtenerEstudiante(UUID idEstudiante) {
-        throw new UnsupportedOperationException("Método no implementado aún");
+        log.info("Consultando estudiante con ID: {}", idEstudiante);
+        
+        var estudiante = estudianteRepository.findById(idEstudiante)
+                .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con ID: " + idEstudiante));
+        
+        return convertirEstudianteADTO(estudiante);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EstudianteDTO> obtenerListadoEstudiantes(UUID idGrupo) {
-        throw new UnsupportedOperationException("Método no implementado aún");
+        log.info("Listando estudiantes del grupo con ID: {}", idGrupo);
+        
+        // Verificar que el grupo existe
+        if (!grupoRepository.existsById(idGrupo)) {
+            throw new ResourceNotFoundException("Grupo no encontrado con ID: " + idGrupo);
+        }
+        
+        var estudiantes = estudianteRepository.findByGrupoAsignadoIdGrupo(idGrupo);
+        log.info("Se encontraron {} estudiantes en el grupo", estudiantes.size());
+        
+        return estudiantes.stream()
+                .map(this::convertirEstudianteADTO)
+                .collect(Collectors.toList());
+    }
+    
+    private EstudianteDTO convertirEstudianteADTO(com.sga.model.Estudiante estudiante) {
+        String nombreGrupo = null;
+        UUID idGrupo = null;
+        UUID idGrado = null;
+        String gradoSolicitado = null;
+        
+        if (estudiante.getGrupoAsignado() != null) {
+            idGrupo = estudiante.getGrupoAsignado().getIdGrupo();
+            nombreGrupo = estudiante.getGrupoAsignado().getNombreGrupo();
+            if (estudiante.getGrupoAsignado().getGrado() != null) {
+                idGrado = estudiante.getGrupoAsignado().getGrado().getIdGrado();
+                gradoSolicitado = estudiante.getGrupoAsignado().getGrado().getNombreGrado();
+            }
+        }
+        
+        String nombre1Acudiente = null;
+        String nombre2Acudiente = null;
+        String apellido1Acudiente = null;
+        String apellido2Acudiente = null;
+        UUID idAcudiente = null;
+        
+        if (estudiante.getAcudiente() != null) {
+            idAcudiente = estudiante.getAcudiente().getIdAcudiente();
+            nombre1Acudiente = estudiante.getAcudiente().getNombre();
+            nombre2Acudiente = estudiante.getAcudiente().getNombre2();
+            apellido1Acudiente = estudiante.getAcudiente().getApellido();
+            apellido2Acudiente = estudiante.getAcudiente().getApellido2();
+        }
+        
+        return EstudianteDTO.builder()
+                .idEstudiante(estudiante.getIdEstudiante())
+                .nombre(estudiante.getNombre())
+                .nombre2(estudiante.getNombre2())
+                .apellido(estudiante.getApellido())
+                .apellido2(estudiante.getApellido2())
+                .numeroDocumento(estudiante.getNumeroDocumento())
+                .estado(estudiante.getEstado())
+                .idAcudiente(idAcudiente)
+                .nombre1Acudiente(nombre1Acudiente)
+                .nombre2Acudiente(nombre2Acudiente)
+                .apellido1Acudiente(apellido1Acudiente)
+                .apellido2Acudiente(apellido2Acudiente)
+                .idGrupo(idGrupo)
+                .nombreGrupo(nombreGrupo)
+                .idGrado(idGrado)
+                .gradoSolicitado(gradoSolicitado)
+                .build();
     }
 
     private GrupoDTO convertirADTO(Grupo grupo) {

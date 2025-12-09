@@ -26,6 +26,7 @@ public class EstudianteDTO {
     private String apellido2Acudiente;
     private UUID idGrupo;
     private String nombreGrupo;
+    private UUID idGrado;
     private String gradoSolicitado;
     private HojaDeVidaDTO hojaDeVida;
 }

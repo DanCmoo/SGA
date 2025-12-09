@@ -1,5 +1,6 @@
 package com.sga.controller;
 
+import com.sga.dto.CambioContrasenaDTO;
 import com.sga.dto.CredencialesDTO;
 import com.sga.dto.RegistroDTO;
 import com.sga.dto.TokenDTO;
@@ -80,5 +81,23 @@ public class UsuarioController {
         log.info("GET /usuarios/profesores - Listando profesores");
         List<UsuarioDTO> profesores = usuarioService.listarProfesores();
         return ResponseEntity.ok(profesores);
+    }
+
+    /**
+     * Endpoint para cambiar la contraseña de un usuario.
+     * Permite cambio forzado en primer login o cambio voluntario posterior.
+     * 
+     * @param id UUID del usuario
+     * @param cambioContrasena DTO con contraseña actual, nueva y confirmación
+     * @return Respuesta exitosa
+     */
+    @PutMapping("/{id}/cambiar-contrasena")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> cambiarContrasena(
+            @PathVariable UUID id,
+            @RequestBody CambioContrasenaDTO cambioContrasena) {
+        log.info("PUT /usuarios/{}/cambiar-contrasena - Cambio de contraseña", id);
+        usuarioService.cambiarContrasena(id, cambioContrasena);
+        return ResponseEntity.ok().build();
     }
 }

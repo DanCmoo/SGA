@@ -8,8 +8,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Sistema de Gestión Académica',
-  description: 'Sistema integral para la gestión académica escolar',
+  title: 'SGA - FIS | Sistema de Gestión Académica',
+  description: 'Sistema de Gestión Académica - Fundación Institución Salesiana',
   generator: 'v0.app',
 }
 

@@ -1,51 +1,89 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Eye, FileText, Star, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AchievementsModal } from "@/components/achievements-modal"
 import { AchievementsHistoryModal } from "@/components/achievements-history-modal"
+import { StudentProfileModal } from "@/components/student-profile-modal"
 import { useToast } from "@/components/toast"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-
-const teacherData = {
-  name: "María González",
-  group: "5to Grado A",
-}
-
-const students = [
-  { id: 1, name: "Ana Martínez" },
-  { id: 2, name: "Luis Rodríguez" },
-  { id: 3, name: "José Hernández" },
-  { id: 4, name: "Carmen Silva" },
-  { id: 5, name: "Pedro Ramírez" },
-]
+import { LogroService, EstudianteDTO } from "@/lib/services/logro.service"
+import { LoadingSkeleton } from "@/components/loading-skeleton"
 
 export default function ProfesorPage() {
-  const [selectedStudent, setSelectedStudent] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [students, setStudents] = useState<EstudianteDTO[]>([])
+  const [teacherData, setTeacherData] = useState({ name: "", group: "", idGrupo: "" })
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(null)
   const [modalType, setModalType] = useState<"view" | "document" | "star" | null>(null)
   const [isAchievementsModalOpen, setIsAchievementsModalOpen] = useState(false)
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const [selectedStudentName, setSelectedStudentName] = useState("")
   const { showToast, ToastContainer } = useToast()
   const router = useRouter()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
 
-  const handleAction = (studentId: number, type: "view" | "document" | "star") => {
+  useEffect(() => {
+    loadData()
+  }, [user])
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      
+      if (!user || !user.profesor?.grupoAsignado) {
+        showToast("No tienes un grupo asignado", "error")
+        setLoading(false)
+        return
+      }
+
+      // Cargar información del profesor
+      const nombreCompleto = `${user.nombre} ${user.nombre2 || ''} ${user.apellido} ${user.apellido2 || ''}`.trim()
+      
+      // Cargar estudiantes del grupo
+      const estudiantesData = await LogroService.obtenerEstudiantesGrupo(user.profesor.grupoAsignado)
+      
+      setTeacherData({
+        name: nombreCompleto,
+        group: estudiantesData[0]?.nombreGrupo || "Sin grupo",
+        idGrupo: user.profesor.grupoAsignado
+      })
+      
+      setStudents(estudiantesData)
+      showToast(`Bienvenido, ${nombreCompleto}`, "success")
+    } catch (error) {
+      console.error('Error al cargar datos:', error)
+      showToast("Error al cargar los datos", "error")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAction = (studentId: string, type: "view" | "document" | "star") => {
     setSelectedStudent(studentId)
     setModalType(type)
-    const student = students.find((s) => s.id === studentId)
+    const student = students.find((s) => s.idEstudiante === studentId)
     if (student) {
-      setSelectedStudentName(student.name)
+      const nombreCompleto = `${student.nombre} ${student.nombre2 || ''} ${student.apellido} ${student.apellido2 || ''}`.trim()
+      setSelectedStudentName(nombreCompleto)
       if (type === "star") {
         setIsAchievementsModalOpen(true)
-        showToast(`Evaluando logros de ${student.name}`, "info")
+        showToast(`Evaluando logros de ${nombreCompleto}`, "info")
       } else if (type === "document") {
         setIsHistoryModalOpen(true)
-        showToast(`Cargando historial de ${student.name}`, "info")
+        showToast(`Cargando historial de ${nombreCompleto}`, "info")
+      } else if (type === "view") {
+        setIsProfileModalOpen(true)
+        showToast(`Cargando perfil de ${nombreCompleto}`, "info")
       }
     }
+  }
+
+  if (loading) {
+    return <LoadingSkeleton />
   }
 
   return (
@@ -101,46 +139,61 @@ export default function ProfesorPage() {
           </h3>
 
           <div className="space-y-5">
-            {students.map((student) => (
-              <div
-                key={student.id}
-                className="flex items-center justify-between p-6 bg-gradient-to-r from-beige-50 to-beige-100/50 border-2 border-beige-300 rounded-2xl hover:shadow-lg hover:shadow-beige-300/50 hover:border-brown-400 transition-all duration-300 hover:-translate-y-1"
-              >
-                <span className="text-xl font-bold text-navy-700">{student.name}</span>
-
-                <div className="flex gap-4">
-                  <Button
-                    onClick={() => handleAction(student.id, "view")}
-                    className="bg-navy-600 hover:bg-navy-700 text-white border-2 border-navy-600 p-4 h-auto rounded-xl shadow-md shadow-navy-600/30 hover:shadow-xl hover:shadow-navy-600/40 transition-all duration-300 transform hover:scale-110"
-                    title="Ver información del estudiante"
-                  >
-                    <Eye className="h-6 w-6" />
-                  </Button>
-
-                  <Button
-                    onClick={() => handleAction(student.id, "document")}
-                    className="bg-coral-500 hover:bg-coral-600 text-white border-2 border-coral-500 p-4 h-auto rounded-xl shadow-md shadow-coral-500/30 hover:shadow-xl hover:shadow-coral-500/40 transition-all duration-300 transform hover:scale-110"
-                    title="Ver documentos y notas"
-                  >
-                    <FileText className="h-6 w-6" />
-                  </Button>
-
-                  <Button
-                    onClick={() => handleAction(student.id, "star")}
-                    className="bg-brown-600 hover:bg-brown-700 text-white border-2 border-brown-600 p-4 h-auto rounded-xl shadow-md shadow-brown-600/30 hover:shadow-xl hover:shadow-brown-600/40 transition-all duration-300 transform hover:scale-110"
-                    title="Calificaciones y destacados"
-                  >
-                    <Star className="h-6 w-6" />
-                  </Button>
-                </div>
+            {students.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p className="text-xl">No hay estudiantes asignados a este grupo</p>
               </div>
-            ))}
+            ) : (
+              students.map((student) => {
+                const nombreCompleto = `${student.nombre} ${student.nombre2 || ''} ${student.apellido} ${student.apellido2 || ''}`.trim()
+                return (
+                  <div
+                    key={student.idEstudiante}
+                    className="flex items-center justify-between p-6 bg-gradient-to-r from-beige-50 to-beige-100/50 border-2 border-beige-300 rounded-2xl hover:shadow-lg hover:shadow-beige-300/50 hover:border-brown-400 transition-all duration-300 hover:-translate-y-1"
+                  >
+                    <span className="text-xl font-bold text-navy-700">{nombreCompleto}</span>
+
+                    <div className="flex gap-4">
+                      <Button
+                        onClick={() => handleAction(student.idEstudiante, "view")}
+                        className="bg-navy-600 hover:bg-navy-700 text-white border-2 border-navy-600 p-4 h-auto rounded-xl shadow-md shadow-navy-600/30 hover:shadow-xl hover:shadow-navy-600/40 transition-all duration-300 transform hover:scale-110"
+                        title="Ver información del estudiante"
+                      >
+                        <Eye className="h-6 w-6" />
+                      </Button>
+
+                      <Button
+                        onClick={() => handleAction(student.idEstudiante, "document")}
+                        className="bg-coral-500 hover:bg-coral-600 text-white border-2 border-coral-500 p-4 h-auto rounded-xl shadow-md shadow-coral-500/30 hover:shadow-xl hover:shadow-coral-500/40 transition-all duration-300 transform hover:scale-110"
+                        title="Ver historial de evaluaciones"
+                      >
+                        <FileText className="h-6 w-6" />
+                      </Button>
+
+                      <Button
+                        onClick={() => handleAction(student.idEstudiante, "star")}
+                        className="bg-brown-600 hover:bg-brown-700 text-white border-2 border-brown-600 p-4 h-auto rounded-xl shadow-md shadow-brown-600/30 hover:shadow-xl hover:shadow-brown-600/40 transition-all duration-300 transform hover:scale-110"
+                        title="Evaluar logros"
+                      >
+                        <Star className="h-6 w-6" />
+                      </Button>
+                    </div>
+                  </div>
+                )
+              })
+            )}
           </div>
         </div>
       </main>
 
       {selectedStudent && (
         <>
+          <StudentProfileModal
+            isOpen={isProfileModalOpen}
+            onClose={() => setIsProfileModalOpen(false)}
+            studentName={selectedStudentName}
+            studentId={selectedStudent}
+          />
           <AchievementsModal
             isOpen={isAchievementsModalOpen}
             onClose={() => setIsAchievementsModalOpen(false)}

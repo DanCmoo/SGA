@@ -5,7 +5,9 @@ import com.sga.dto.UsuarioDTO;
 import com.sga.model.*;
 import com.sga.repository.*;
 import com.sga.service.AdministradorService;
+import com.sga.service.EmailService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdministradorServiceImpl implements AdministradorService {
@@ -24,10 +27,13 @@ public class AdministradorServiceImpl implements AdministradorService {
     private final DirectorRepository directorRepository;
     private final AdministradorRepository administradorRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Override
     @Transactional
     public UsuarioDTO crearUsuario(UsuarioCreacionDTO datos) {
+        log.info("Creando nuevo usuario con rol: {}", datos.getRol());
+        
         // Crear token de usuario
         Token_Usuario token = Token_Usuario.builder()
                 .contrasena(passwordEncoder.encode(datos.getContrasenaGenerada()))
@@ -114,7 +120,39 @@ public class AdministradorServiceImpl implements AdministradorService {
                 throw new IllegalArgumentException("Rol no válido: " + datos.getRol());
         }
 
+        log.info("Usuario creado exitosamente con ID: {}", usuario.getIdUsuario());
+        
+        // Construir nombre completo para el email
+        String nombreCompleto = construirNombreCompleto(datos);
+        
+        // Enviar email con las credenciales (asíncrono)
+        try {
+            emailService.enviarCredencialesNuevoUsuario(
+                datos.getCorreoElectronico(),
+                nombreCompleto,
+                datos.getCorreoElectronico(),
+                datos.getContrasenaGenerada(),
+                datos.getRol()
+            );
+            log.info("Email de credenciales enviado a: {}", datos.getCorreoElectronico());
+        } catch (Exception e) {
+            log.error("Error al enviar email de credenciales: {}", e.getMessage());
+            // No lanzar excepción, el usuario ya fue creado exitosamente
+        }
+
         return convertirAUsuarioDTO(usuario);
+    }
+    
+    private String construirNombreCompleto(UsuarioCreacionDTO datos) {
+        StringBuilder nombreCompleto = new StringBuilder(datos.getNombre());
+        if (datos.getNombre2() != null && !datos.getNombre2().isEmpty()) {
+            nombreCompleto.append(" ").append(datos.getNombre2());
+        }
+        nombreCompleto.append(" ").append(datos.getApellido());
+        if (datos.getApellido2() != null && !datos.getApellido2().isEmpty()) {
+            nombreCompleto.append(" ").append(datos.getApellido2());
+        }
+        return nombreCompleto.toString();
     }
 
     @Override

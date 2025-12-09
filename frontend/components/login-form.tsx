@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { GraduationCap, Lock, Mail, AlertCircle } from "lucide-react"
 import { FirstTimeModal } from "./first-time-modal"
+import { CambioContrasenaModal } from "./cambio-contrasena-modal"
 import { useAuth } from "@/contexts/auth-context"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
@@ -18,8 +19,10 @@ export function LoginForm() {
   const [correoElectronico, setCorreoElectronico] = useState("")
   const [contrasena, setContrasena] = useState("")
   const [showFirstTimeModal, setShowFirstTimeModal] = useState(false)
+  const [showCambioContrasenaModal, setShowCambioContrasenaModal] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [usuarioId, setUsuarioId] = useState<string>("")
+  const [usuarioRol, setUsuarioRol] = useState<string>("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,12 +35,21 @@ export function LoginForm() {
         contrasena,
       })
 
-      // Verificar si es primera vez (datos personales incompletos)
       const usuario = response.usuario
+      setUsuarioId(usuario.idUsuario)
+      setUsuarioRol(usuario.rol)
+
+      // Verificar si requiere cambio de contraseña
+      if (response.requiereCambioContrasena) {
+        setShowCambioContrasenaModal(true)
+        setIsLoading(false)
+        return
+      }
+
+      // Verificar si es primera vez (datos personales incompletos)
       const esPrimeraVez = !usuario.nombre || !usuario.cedula || !usuario.fechaNacimiento
 
       if (esPrimeraVez) {
-        setUsuarioId(usuario.idUsuario)
         setShowFirstTimeModal(true)
       } else {
         // Redirigir según el rol
@@ -49,6 +61,12 @@ export function LoginForm() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleCambioContrasenaSuccess = () => {
+    setShowCambioContrasenaModal(false)
+    // Después de cambiar la contraseña, redirigir según el rol
+    redirectByRole(usuarioRol)
   }
 
   const redirectByRole = (rol: string) => {
@@ -142,6 +160,13 @@ export function LoginForm() {
         onClose={() => setShowFirstTimeModal(false)}
         usuarioId={usuarioId}
         onSuccess={redirectByRole}
+      />
+      <CambioContrasenaModal
+        isOpen={showCambioContrasenaModal}
+        onClose={() => setShowCambioContrasenaModal(false)}
+        onSuccess={handleCambioContrasenaSuccess}
+        userId={usuarioId}
+        isPrimerLogin={true}
       />
     </>
   )

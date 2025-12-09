@@ -2,13 +2,36 @@
 -- Sistema de Gestión Académica
 
 -- ==================================================
+-- LIMPIEZA DE DATOS DUPLICADOS
+-- ==================================================
+-- Eliminar grados duplicados manteniendo solo uno de cada nombre
+DELETE FROM grado g1
+WHERE EXISTS (
+    SELECT 1 FROM grado g2
+    WHERE g2.nombre_grado = g1.nombre_grado
+    AND g2.id_grado < g1.id_grado
+);
+
+-- Actualizar nombres de grados existentes para que tengan tildes correctas
+UPDATE grado SET nombre_grado = 'Párvulos' WHERE LOWER(nombre_grado) LIKE '%parvulos%' OR LOWER(nombre_grado) LIKE '%párvulos%';
+UPDATE grado SET nombre_grado = 'Caminadores' WHERE LOWER(nombre_grado) LIKE '%caminadores%';
+UPDATE grado SET nombre_grado = 'Pre-jardín' WHERE LOWER(nombre_grado) LIKE '%jardin%' OR LOWER(nombre_grado) LIKE '%jardín%';
+
+-- ==================================================
 -- GRADOS
 -- ==================================================
-INSERT INTO grado (id_grado, nombre_grado) VALUES
-    (gen_random_uuid(), 'Párvulos'),
-    (gen_random_uuid(), 'Caminadores'),
-    (gen_random_uuid(), 'Pre-jardín')
-ON CONFLICT DO NOTHING;
+-- Insertar grados solo si no existen
+INSERT INTO grado (id_grado, nombre_grado)
+SELECT gen_random_uuid(), 'Párvulos'
+WHERE NOT EXISTS (SELECT 1 FROM grado WHERE LOWER(nombre_grado) LIKE '%parvulos%' OR LOWER(nombre_grado) LIKE '%párvulos%');
+
+INSERT INTO grado (id_grado, nombre_grado)
+SELECT gen_random_uuid(), 'Caminadores'
+WHERE NOT EXISTS (SELECT 1 FROM grado WHERE LOWER(nombre_grado) LIKE '%caminadores%');
+
+INSERT INTO grado (id_grado, nombre_grado)
+SELECT gen_random_uuid(), 'Pre-jardín'
+WHERE NOT EXISTS (SELECT 1 FROM grado WHERE LOWER(nombre_grado) LIKE '%jardin%' OR LOWER(nombre_grado) LIKE '%jardín%');
 
 -- ==================================================
 -- PERIODOS ACADÉMICOS
@@ -23,11 +46,11 @@ ON CONFLICT DO NOTHING;
 -- ==================================================
 
 -- Nota: La contraseña por defecto para todos los usuarios es: "password123"
--- Hash generado con BCrypt: $2a$10$Z1234567890123456789.uXBwVkRfQfG7xQ.YC8tFy8uVkJG5S
+-- Hash generado con BCrypt usando online BCrypt generator
 
 -- ADMINISTRADOR
-INSERT INTO token_usuario (id_token, contrasena, rol) VALUES
-    ('a1111111-1111-1111-1111-111111111111', '$2a$10$Z1234567890123456789.uXBwVkRfQfG7xQ.YC8tFy8uVkJG5S', 'ADMINISTRADOR')
+INSERT INTO token_usuario (id_token, contrasena, rol, requiere_cambio_contrasena) VALUES
+    ('a1111111-1111-1111-1111-111111111111', '$2a$10$CR1S1BpAi5GewP92XUoY4.07XEQVu463MmUSbH3ppxYl3vz/6BeuC', 'ADMINISTRADOR', false)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO usuario (id_usuario, nombre, apellido, cedula, correo_electronico, fecha_nacimiento, id_token) VALUES
@@ -39,8 +62,8 @@ INSERT INTO administrador (id_usuario, id_administrador) VALUES
 ON CONFLICT DO NOTHING;
 
 -- COORDINADOR
-INSERT INTO token_usuario (id_token, contrasena, rol) VALUES
-    ('c1111111-1111-1111-1111-111111111111', '$2a$10$Z1234567890123456789.uXBwVkRfQfG7xQ.YC8tFy8uVkJG5S', 'COORDINADOR')
+INSERT INTO token_usuario (id_token, contrasena, rol, requiere_cambio_contrasena) VALUES
+    ('c1111111-1111-1111-1111-111111111111', '$2a$10$CR1S1BpAi5GewP92XUoY4.07XEQVu463MmUSbH3ppxYl3vz/6BeuC', 'COORDINADOR', false)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO usuario (id_usuario, nombre, apellido, cedula, correo_electronico, fecha_nacimiento, id_token) VALUES
@@ -52,8 +75,8 @@ INSERT INTO coordinador (id_usuario, id_coordinador) VALUES
 ON CONFLICT DO NOTHING;
 
 -- DIRECTOR/DIRECTIVO
-INSERT INTO token_usuario (id_token, contrasena, rol) VALUES
-    ('d1111111-1111-1111-1111-111111111111', '$2a$10$Z1234567890123456789.uXBwVkRfQfG7xQ.YC8tFy8uVkJG5S', 'DIRECTOR')
+INSERT INTO token_usuario (id_token, contrasena, rol, requiere_cambio_contrasena) VALUES
+    ('d1111111-1111-1111-1111-111111111111', '$2a$10$CR1S1BpAi5GewP92XUoY4.07XEQVu463MmUSbH3ppxYl3vz/6BeuC', 'DIRECTOR', false)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO usuario (id_usuario, nombre, apellido, cedula, correo_electronico, fecha_nacimiento, id_token) VALUES
@@ -65,8 +88,8 @@ INSERT INTO director (id_usuario, id_director) VALUES
 ON CONFLICT DO NOTHING;
 
 -- PROFESOR 1
-INSERT INTO token_usuario (id_token, contrasena, rol) VALUES
-    ('p1111111-1111-1111-1111-111111111111', '$2a$10$Z1234567890123456789.uXBwVkRfQfG7xQ.YC8tFy8uVkJG5S', 'PROFESOR')
+INSERT INTO token_usuario (id_token, contrasena, rol, requiere_cambio_contrasena) VALUES
+    ('p1111111-1111-1111-1111-111111111111', '$2a$10$CR1S1BpAi5GewP92XUoY4.07XEQVu463MmUSbH3ppxYl3vz/6BeuC', 'PROFESOR', false)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO usuario (id_usuario, nombre, apellido, cedula, correo_electronico, fecha_nacimiento, id_token) VALUES
@@ -78,8 +101,8 @@ INSERT INTO profesor (id_usuario, id_profesor, grupo_asignado) VALUES
 ON CONFLICT DO NOTHING;
 
 -- PROFESOR 2
-INSERT INTO token_usuario (id_token, contrasena, rol) VALUES
-    ('p2222222-2222-2222-2222-222222222222', '$2a$10$Z1234567890123456789.uXBwVkRfQfG7xQ.YC8tFy8uVkJG5S', 'PROFESOR')
+INSERT INTO token_usuario (id_token, contrasena, rol, requiere_cambio_contrasena) VALUES
+    ('p2222222-2222-2222-2222-222222222222', '$2a$10$CR1S1BpAi5GewP92XUoY4.07XEQVu463MmUSbH3ppxYl3vz/6BeuC', 'PROFESOR', false)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO usuario (id_usuario, nombre, apellido, cedula, correo_electronico, fecha_nacimiento, id_token) VALUES
@@ -91,8 +114,8 @@ INSERT INTO profesor (id_usuario, id_profesor, grupo_asignado) VALUES
 ON CONFLICT DO NOTHING;
 
 -- ACUDIENTE 1
-INSERT INTO token_usuario (id_token, contrasena, rol) VALUES
-    ('u1111111-1111-1111-1111-111111111111', '$2a$10$Z1234567890123456789.uXBwVkRfQfG7xQ.YC8tFy8uVkJG5S', 'ACUDIENTE')
+INSERT INTO token_usuario (id_token, contrasena, rol, requiere_cambio_contrasena) VALUES
+    ('u1111111-1111-1111-1111-111111111111', '$2a$10$CR1S1BpAi5GewP92XUoY4.07XEQVu463MmUSbH3ppxYl3vz/6BeuC', 'ACUDIENTE', false)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO usuario (id_usuario, nombre, apellido, cedula, correo_electronico, fecha_nacimiento, id_token) VALUES
@@ -104,8 +127,9 @@ INSERT INTO acudiente (id_usuario, id_acudiente, estado) VALUES
 ON CONFLICT DO NOTHING;
 
 -- ACUDIENTE 2
-INSERT INTO token_usuario (id_token, contrasena, rol) VALUES
-    ('u2222222-2222-2222-2222-222222222222', '$2a$10$Z1234567890123456789.uXBwVkRfQfG7xQ.YC8tFy8uVkJG5S', 'ACUDIENTE')
+-- ACUDIENTE 2
+INSERT INTO token_usuario (id_token, contrasena, rol, requiere_cambio_contrasena) VALUES
+    ('u2222222-2222-2222-2222-222222222222', '$2a$10$CR1S1BpAi5GewP92XUoY4.07XEQVu463MmUSbH3ppxYl3vz/6BeuC', 'ACUDIENTE', false)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO usuario (id_usuario, nombre, apellido, cedula, correo_electronico, fecha_nacimiento, id_token) VALUES

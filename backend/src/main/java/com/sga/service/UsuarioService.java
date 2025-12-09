@@ -1,5 +1,6 @@
 package com.sga.service;
 
+import com.sga.dto.CambioContrasenaDTO;
 import com.sga.dto.CredencialesDTO;
 import com.sga.dto.RegistroDTO;
 import com.sga.dto.TokenDTO;
@@ -12,4 +13,5 @@ public interface UsuarioService {
     TokenDTO autenticar(CredencialesDTO credenciales);
     UsuarioDTO ingresarDatosPersonales(UUID idUsuario, RegistroDTO datos);
     List<UsuarioDTO> listarProfesores();
+    void cambiarContrasena(UUID idUsuario, CambioContrasenaDTO cambioContrasena);
 }

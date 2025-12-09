@@ -8,10 +8,12 @@ spring:
     name: sga-backend
   
   datasource:
-    url: jdbc:postgresql://localhost:5432/sga_db
+    url: jdbc:postgresql://localhost:5432/sga_db?useUnicode=true&characterEncoding=UTF-8
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-init-sql: "SET NAMES 'UTF8'"
   
   jpa:
     hibernate:
@@ -21,16 +23,41 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          charset: UTF-8
+        connection:
+          characterEncoding: utf8
+          CharSet: utf8
+          useUnicode: true
   
   sql:
     init:
-      mode: always
+      mode: never
       data-locations: classpath:data-init.sql
       continue-on-error: true
+  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: sgafis2025@gmail.com
+    password: hpfo rpak vnpn ywmb
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970337336763979244226452948404D635166546A576E5A7234753778214125442A
   expiration: 86400000
+
+email:
+  from: sgafis2025@gmail.com
+  from-name: Sistema de Gestión Académica - FIS
 
 logging:
   level:

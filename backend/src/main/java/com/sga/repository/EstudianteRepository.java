@@ -10,6 +10,7 @@ import java.util.UUID;
 @Repository
 public interface EstudianteRepository extends JpaRepository<Estudiante, UUID> {
     List<Estudiante> findByGrupoAsignadoIdGrupo(UUID idGrupo);
+    int countByGrupoAsignadoIdGrupo(UUID idGrupo);
     List<Estudiante> findByAcudienteIdUsuario(UUID idAcudiente);
     List<Estudiante> findByEstadoTrue();
     List<Estudiante> findByEstadoFalse();

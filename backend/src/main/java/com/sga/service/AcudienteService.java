@@ -1,6 +1,7 @@
 package com.sga.service;
 
 import com.sga.dto.EstudianteDTO;
+import com.sga.dto.HistoricoLogroDTO;
 import com.sga.dto.PreinscripcionDTO;
 
 import java.util.List;
@@ -12,4 +13,10 @@ public interface AcudienteService {
     List<EstudianteDTO> listarEstudiantesACargo(UUID idAcudiente);
     EstudianteDTO obtenerEstudiante(UUID idEstudiante);
     void registrarPreinscripcion(PreinscripcionDTO preinscripcion);
+    
+    /**
+     * Obtener el histórico de logros de un estudiante
+     * Verifica que el acudiente tenga permiso sobre ese estudiante
+     */
+    List<HistoricoLogroDTO> obtenerHistoricoEstudiante(UUID idAcudiente, UUID idEstudiante);
 }

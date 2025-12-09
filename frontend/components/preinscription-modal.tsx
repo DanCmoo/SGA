@@ -249,9 +249,9 @@ export function PreinscriptionModal({ isOpen, onClose }: PreinscriptionModalProp
                   required
                 >
                   <option value="">Seleccionar grado</option>
-                  <option value="PARVULOS">Párvulos</option>
-                  <option value="CAMINADORES">Caminadores</option>
-                  <option value="PRE-JARDIN">Pre-jardín</option>
+                  <option value="Párvulos">Párvulos</option>
+                  <option value="Caminadores">Caminadores</option>
+                  <option value="Pre-jardín">Pre-jardín</option>
                 </select>
               </div>
             </div>

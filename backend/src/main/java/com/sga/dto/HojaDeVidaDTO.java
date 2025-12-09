@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -14,7 +15,11 @@ import java.util.UUID;
 @NoArgsConstructor
 public class HojaDeVidaDTO {
     private UUID idHojaDeVida;
-    private String detallesMedicos;
-    private String observacionesAprendizaje;
-    private LocalDate fechaActualizacion;
+    private UUID idEstudiante;
+    private String nombreCompleto;
+    private String nombreAcudiente;
+    private LocalDate fechaNacimiento;
+    private String documentoIdentidad;
+    private List<String> detallesMedicos;
+    private List<String> observacionesAprendizaje;
 }

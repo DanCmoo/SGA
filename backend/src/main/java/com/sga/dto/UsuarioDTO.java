@@ -22,4 +22,15 @@ public class UsuarioDTO {
     private String correoElectronico;
     private LocalDate fechaNacimiento;
     private String rol;
+    
+    // Datos específicos del profesor
+    private ProfesorInfoDTO profesor;
+    
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ProfesorInfoDTO {
+        private String grupoAsignado;
+    }
 }

@@ -1,0 +1,10 @@
+# Archivos de configuración local
+.env
+.env.local
+
+# Logs
+*.log
+
+# Archivos de configuración con credenciales
+application-local.yml
+application-local.properties

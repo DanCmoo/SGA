@@ -177,6 +177,7 @@ public class AdmisionesServiceImpl implements AdmisionesService {
                     Token_Usuario tokenUsuario = Token_Usuario.builder()
                             .contrasena(passwordEncoder.encode(preinscripcionDTO.getCedulaAcudiente()))
                             .rol("ACUDIENTE")
+                            .requiereCambioContrasena(true)
                             .build();
 
                     Acudiente nuevoAcudiente = Acudiente.builder()
@@ -191,7 +192,13 @@ public class AdmisionesServiceImpl implements AdmisionesService {
                             .estado(true)
                             .build();
 
-                    return acudienteRepository.save(nuevoAcudiente);
+                    Acudiente acudienteGuardado = acudienteRepository.save(nuevoAcudiente);
+                    
+                    log.info("Acudiente creado exitosamente. Correo: {}, Contraseña temporal: su cédula ({})", 
+                            preinscripcionDTO.getCorreoAcudiente(), 
+                            preinscripcionDTO.getCedulaAcudiente());
+                    
+                    return acudienteGuardado;
                 });
     }
 

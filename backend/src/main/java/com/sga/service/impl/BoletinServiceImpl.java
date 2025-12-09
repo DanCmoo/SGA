@@ -65,12 +65,7 @@ public class BoletinServiceImpl implements BoletinService {
                     return boletinRepository.save(nuevoBoletin);
                 });
 
-        // Obtener evaluaciones del boletín
-        List<EvaluacionDTO> evaluaciones = evaluacionRepository.findByBoletinIdBoletin(boletin.getIdBoletin())
-                .stream()
-                .map(this::convertirAEvaluacionDTO)
-                .collect(Collectors.toList());
-
+        // El boletín ya no contiene evaluaciones directamente, se consultan por el LogroService
         return BoletinDTO.builder()
                 .idBoletin(boletin.getIdBoletin())
                 .idEstudiante(estudiante.getIdEstudiante())
@@ -78,7 +73,6 @@ public class BoletinServiceImpl implements BoletinService {
                 .periodo(periodo)
                 .fechaInicioPeriodo(periodoAcademico.getFechaInicio())
                 .fechaFinPeriodo(periodoAcademico.getFechaFin())
-                .evaluaciones(evaluaciones)
                 .fechaGeneracion(LocalDate.now())
                 .build();
     }
@@ -89,6 +83,8 @@ public class BoletinServiceImpl implements BoletinService {
         throw new UnsupportedOperationException("Método no implementado aún");
     }
 
+    // Método deprecado - EvaluacionDTO ha cambiado de estructura
+    /*
     private EvaluacionDTO convertirAEvaluacionDTO(EvaluacionCategoriaLogro evaluacion) {
         return EvaluacionDTO.builder()
                 .idEvaluacion(evaluacion.getIdEvaluacion())
@@ -98,4 +94,5 @@ public class BoletinServiceImpl implements BoletinService {
                 .fechaEvaluacion(evaluacion.getFechaEvaluacion())
                 .build();
     }
+    */
 }

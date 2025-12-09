@@ -28,6 +28,10 @@ public class Token_Usuario {
     @Column(name = "rol", nullable = false)
     private String rol;
 
+    @Column(name = "requiere_cambio_contrasena", nullable = false)
+    @Builder.Default
+    private Boolean requiereCambioContrasena = true;
+
     @OneToOne(mappedBy = "tokenUsuario")
     @JsonBackReference
     private Usuario usuario;

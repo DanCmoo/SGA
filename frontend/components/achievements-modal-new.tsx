@@ -39,11 +39,22 @@ export function AchievementsModal({ isOpen, onClose, studentName, studentId }: A
   const [estudiante, setEstudiante] = useState<EstudianteDTO | null>(null)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
 
+  // Cargar datos iniciales cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
       loadData()
     }
   }, [isOpen, studentId])
+
+  // Resetear evaluaciones a null cuando cambia el período
+  useEffect(() => {
+    if (periodoSeleccionado) {
+      setCategories(prev => prev.map(cat => ({
+        ...cat,
+        achievements: cat.achievements.map(a => ({ ...a, value: null }))
+      })))
+    }
+  }, [periodoSeleccionado])
 
   const loadData = async () => {
     try {
@@ -82,41 +93,6 @@ export function AchievementsModal({ isOpen, onClose, studentName, studentId }: A
       setToast({ message: "Error al cargar los datos", type: "error" })
     } finally {
       setLoading(false)
-    }
-  }
-
-  const cargarEvaluacionExistente = async () => {
-    if (!periodoSeleccionado || !estudiante) return
-    
-    try {
-      const evaluacion = await LogroService.obtenerEvaluacionPorPeriodo(estudiante.idEstudiante, periodoSeleccionado)
-      
-      if (evaluacion && evaluacion.categorias.length > 0) {
-        // Actualizar las categorías con los logros ya evaluados
-        setCategories(prev => prev.map(cat => {
-          const evaluacionCat = evaluacion.categorias.find(ec => ec.idCategoria === cat.id)
-          if (!evaluacionCat) return cat
-          
-          return {
-            ...cat,
-            achievements: cat.achievements.map(ach => ({
-              ...ach,
-              value: evaluacionCat.logrosAlcanzados.some(l => l.idLogro === ach.id)
-            }))
-          }
-        }))
-      } else {
-        // Resetear todas las evaluaciones a null
-        setCategories(prev => prev.map(cat => ({
-          ...cat,
-          achievements: cat.achievements.map(ach => ({
-            ...ach,
-            value: null
-          }))
-        })))
-      }
-    } catch (error) {
-      console.error('Error al cargar evaluación existente:', error)
     }
   }
 
@@ -163,6 +139,11 @@ export function AchievementsModal({ isOpen, onClose, studentName, studentId }: A
       return
     }
 
+    if (!todosLosLogrosEvaluados()) {
+      setToast({ message: "Debes evaluar todos los logros antes de guardar", type: "error" })
+      return
+    }
+
     try {
       setSaving(true)
       
@@ -190,8 +171,6 @@ export function AchievementsModal({ isOpen, onClose, studentName, studentId }: A
       setSaving(false)
     }
   }
-
-  if (!isOpen) return null
 
   if (!isOpen) return null
 

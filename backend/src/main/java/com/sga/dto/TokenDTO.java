@@ -16,4 +16,5 @@ public class TokenDTO {
     private String tipo;
     private LocalDateTime expiracion;
     private UsuarioDTO usuario;
+    private Boolean requiereCambioContrasena;
 }

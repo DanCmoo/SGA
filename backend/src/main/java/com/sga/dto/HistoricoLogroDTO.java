@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,19 +12,15 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class EvaluacionDTO {
-    private UUID idEvaluacion;
-    private UUID idEstudiante;
-    private String nombreEstudiante;
+public class HistoricoLogroDTO {
     private PeriodoAcademicoDTO periodo;
-    private List<CategoriaEvaluacionDTO> categorias;
-    private LocalDate fechaEvaluacion;
+    private List<CategoriaHistoricoDTO> categorias;
     
     @Data
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class CategoriaEvaluacionDTO {
+    public static class CategoriaHistoricoDTO {
         private UUID idCategoria;
         private String nombreCategoria;
         private List<LogroDTO> logrosAlcanzados;

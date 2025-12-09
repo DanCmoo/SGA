@@ -22,6 +22,9 @@ public class PeriodoAcademico {
     @Column(name = "id_periodo_academico", columnDefinition = "UUID")
     private UUID idPeriodoAcademico;
 
+    @Column(name = "nombre", nullable = false, length = 100)
+    private String nombre;
+
     @Column(name = "fecha_inicio", nullable = false)
     private LocalDate fechaInicio;
 
