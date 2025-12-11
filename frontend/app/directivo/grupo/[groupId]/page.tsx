@@ -1,13 +1,20 @@
 "use client"
 
 import { useParams, useRouter } from "next/navigation"
-import { Eye, FileText, Loader2 } from "lucide-react"
+import { Eye, FileText, Loader2, Download, Users, TrendingUp, BarChart } from "lucide-react"
 import { AchievementsHistoryModal } from "@/components/achievements-history-modal"
 import { StudentProfileModal } from "@/components/student-profile-modal"
 import { Breadcrumbs } from "@/components/breadcrumbs"
 import { useToast } from "@/components/toast"
 import { useState, useEffect } from "react"
 import { DirectivoService, type GrupoDTO, type EstudianteDTO } from "@/lib/services/directivo.service"
+
+interface EstadisticasGrupo {
+  totalEstudiantes: number
+  estudiantesActivos: number
+  estudiantesInactivos: number
+  porcentajeActivos: number
+}
 
 export default function GroupDetailPage() {
   const params = useParams()
@@ -20,6 +27,12 @@ export default function GroupDetailPage() {
   const [selectedStudent, setSelectedStudent] = useState<{ nombre: string; idEstudiante: string } | null>(null)
   const [grupo, setGrupo] = useState<GrupoDTO | null>(null)
   const [estudiantes, setEstudiantes] = useState<EstudianteDTO[]>([])
+  const [estadisticas, setEstadisticas] = useState<EstadisticasGrupo>({
+    totalEstudiantes: 0,
+    estudiantesActivos: 0,
+    estudiantesInactivos: 0,
+    porcentajeActivos: 0
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -35,6 +48,16 @@ export default function GroupDetailPage() {
       // Cargar estudiantes del grupo
       const estudiantesData = await DirectivoService.obtenerEstudiantesDeGrupo(groupId)
       setEstudiantes(estudiantesData)
+      
+      // Calcular estadísticas
+      const activos = estudiantesData.filter(e => e.estado !== false).length
+      const inactivos = estudiantesData.length - activos
+      setEstadisticas({
+        totalEstudiantes: estudiantesData.length,
+        estudiantesActivos: activos,
+        estudiantesInactivos: inactivos,
+        porcentajeActivos: estudiantesData.length > 0 ? Math.round((activos / estudiantesData.length) * 100) : 0
+      })
       
       // Obtener información del grupo desde los estudiantes (asumiendo que todos tienen el mismo grupo)
       if (estudiantesData.length > 0) {
@@ -57,6 +80,38 @@ export default function GroupDetailPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleExportarLista = () => {
+    if (estudiantes.length === 0) {
+      showToast('No hay estudiantes para exportar', 'error')
+      return
+    }
+
+    // Crear CSV
+    const headers = ['Nombre Completo', 'Documento', 'Estado']
+    const rows = estudiantes.map(e => {
+      const nombreCompleto = `${e.nombre}${e.nombre2 ? ' ' + e.nombre2 : ''} ${e.apellido}${e.apellido2 ? ' ' + e.apellido2 : ''}`
+      return [nombreCompleto, e.numeroDocumento, e.estado !== false ? 'Activo' : 'Inactivo']
+    })
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n')
+
+    // Descargar archivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `lista_estudiantes_${grupo?.nombre || 'grupo'}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    showToast('Lista exportada exitosamente', 'success')
   }
 
   const handleViewStudent = (estudiante: EstudianteDTO) => {
@@ -110,14 +165,63 @@ export default function GroupDetailPage() {
             <div className="h-1 w-24 bg-gradient-to-r from-coral-500 to-coral-600 rounded-full"></div>
           </div>
 
+          {/* Estadísticas del Grupo */}
+          <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+                <TrendingUp className="h-5 w-5 text-white/60" />
+              </div>
+              <p className="text-white/80 text-sm font-medium">Total Estudiantes</p>
+              <p className="text-3xl font-bold text-white">{estadisticas.totalEstudiantes}</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <BarChart className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <p className="text-white/80 text-sm font-medium">Estudiantes Activos</p>
+              <p className="text-3xl font-bold text-white">{estadisticas.estudiantesActivos}</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <BarChart className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <p className="text-white/80 text-sm font-medium">% Activos</p>
+              <p className="text-3xl font-bold text-white">{estadisticas.porcentajeActivos}%</p>
+            </div>
+          </div>
+
           <div className="mb-8 rounded-xl border-2 border-brown-600 bg-gradient-to-br from-beige-100/50 to-beige-50/30 p-5 shadow-sm hover:shadow-md transition-all duration-300">
-            <p className="text-lg text-navy-800">
-              <span className="font-bold text-brown-700">Director de Grupo:</span>{" "}
-              <span className="font-semibold">{grupo.nombreProfesor || 'No asignado'}</span>
-            </p>
-            <p className="text-lg text-navy-800 mt-2">
-              <span className="font-bold text-brown-700">Total de Estudiantes:</span>{" "}
-              <span className="font-semibold">{estudiantes.length}</span>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-lg text-navy-800">
+                  <span className="font-bold text-brown-700">Director de Grupo:</span>{" "}
+                  <span className="font-semibold">{grupo.nombreProfesor || 'No asignado'}</span>
+                </p>
+                <p className="text-lg text-navy-800 mt-2">
+                  <span className="font-bold text-brown-700">Grado:</span>{" "}
+                  <span className="font-semibold">{grupo.nombreGrado}</span>
+                </p>
+              </div>
+              <button
+                onClick={handleExportarLista}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 hover:scale-105 shadow-lg"
+              >
+                <Download className="h-5 w-5" />
+                Exportar Lista
+              </button>
+            </div>
+          </div>
+
+          <h2 className="mb-4 text-2xl font-bold text-navy-800">Lista de Estudiantes</h2>
             </p>
           </div>
 

@@ -1,11 +1,12 @@
 "use client"
-import { X, Loader2 } from "lucide-react"
+import { X, Loader2, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useState, useEffect } from "react"
 import { AcudienteService } from "@/lib/services/acudiente.service"
 import type { HistoricoLogroDTO, PeriodoAcademicoDTO } from "@/lib/services/logro.service"
 import { LogroService } from "@/lib/services/logro.service"
+import { BoletinService } from "@/lib/services/boletin.service"
 
 interface GuardianAchievementsModalProps {
   isOpen: boolean
@@ -26,6 +27,7 @@ export function GuardianAchievementsModal({
   const [historico, setHistorico] = useState<HistoricoLogroDTO[]>([])
   const [periodos, setPeriodos] = useState<PeriodoAcademicoDTO[]>([])
   const [periodoSeleccionado, setPeriodoSeleccionado] = useState<string>("")
+  const [descargandoPDF, setDescargandoPDF] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -54,6 +56,20 @@ export function GuardianAchievementsModal({
   }
 
   const evaluacionSeleccionada = historico.find(h => h.periodo.idPeriodo === periodoSeleccionado)
+
+  const handleDescargarBoletin = async () => {
+    if (!periodoSeleccionado || !studentId) return
+    
+    setDescargandoPDF(true)
+    try {
+      await BoletinService.descargarYGuardarBoletin(studentId, periodoSeleccionado, studentName)
+    } catch (error) {
+      console.error("Error descargando boletín:", error)
+      alert("Error al descargar el boletín. Por favor intente nuevamente.")
+    } finally {
+      setDescargandoPDF(false)
+    }
+  }
 
   if (!isOpen) return null
 
@@ -88,20 +104,39 @@ export function GuardianAchievementsModal({
             </div>
           ) : (
             <>
-              {/* Selector de período */}
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-navy-700">Período Académico:</label>
-                <select
-                  value={periodoSeleccionado}
-                  onChange={(e) => setPeriodoSeleccionado(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-brown-400 rounded-xl bg-white text-navy-700 font-medium shadow-sm hover:border-brown-600 focus:outline-none focus:ring-2 focus:ring-navy-500 transition-all"
+              {/* Selector de período y botón de descarga */}
+              <div className="flex gap-4 items-end">
+                <div className="flex-1 space-y-2">
+                  <label className="block text-sm font-semibold text-navy-700">Período Académico:</label>
+                  <select
+                    value={periodoSeleccionado}
+                    onChange={(e) => setPeriodoSeleccionado(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-brown-400 rounded-xl bg-white text-navy-700 font-medium shadow-sm hover:border-brown-600 focus:outline-none focus:ring-2 focus:ring-navy-500 transition-all"
+                  >
+                    {periodos.map((periodo) => (
+                      <option key={periodo.idPeriodo} value={periodo.idPeriodo}>
+                        {periodo.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button
+                  onClick={handleDescargarBoletin}
+                  disabled={descargandoPDF || !periodoSeleccionado}
+                  className="bg-gradient-to-r from-coral-500 to-coral-600 hover:from-coral-600 hover:to-coral-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {periodos.map((periodo) => (
-                    <option key={periodo.idPeriodo} value={periodo.idPeriodo}>
-                      {periodo.nombre}
-                    </option>
-                  ))}
-                </select>
+                  {descargandoPDF ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Descargando...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-5 w-5" />
+                      Descargar Boletín
+                    </>
+                  )}
+                </Button>
               </div>
 
               {evaluacionSeleccionada && (

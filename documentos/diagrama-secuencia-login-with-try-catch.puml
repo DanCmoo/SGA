@@ -1,0 +1,80 @@
+@startuml diagrama-secuencia-login-try-catch
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam BoxPadding 10
+
+actor Usuario
+
+participant "page.tsx\n<<from Page/Login>>" as PageLogin
+participant "login-form.tsx\n<<from Package/login>>" as LoginForm
+participant "auth-context.tsx\n<<from Package/General>>" as AuthContext
+participant "auth-service.ts\n<<from Services>>" as AuthService
+participant "api.ts\n<<from Api>>" as API
+
+Usuario -> PageLogin: LoginPage()
+activate PageLogin
+
+PageLogin -> LoginForm: LoginForm()
+activate LoginForm
+
+LoginForm -> LoginForm: onSubmit(datos)
+
+group try [Región de intento de autenticación]
+    LoginForm -> AuthContext: AuthProvider/React.ReactNode
+    activate AuthContext
+    
+    AuthContext -> AuthService: AuthService()
+    activate AuthService
+    note right of AuthService
+        Validación de credenciales
+        y procesamiento de login
+    end note
+    
+    AuthService -> API: api()
+    activate API
+    note right of API
+        POST /api/auth/login
+        Envío de credenciales
+        al backend
+    end note
+    
+    API --> AuthService: Response (token, usuario)
+    deactivate API
+    
+    AuthService --> AuthContext: Usuario autenticado
+    deactivate AuthService
+    
+    AuthContext --> LoginForm: Login exitoso
+    deactivate AuthContext
+    
+    LoginForm --> PageLogin: Redirección al dashboard
+    deactivate LoginForm
+    
+    PageLogin --> Usuario: Acceso concedido
+    deactivate PageLogin
+end
+
+group catch [Región de manejo de errores]
+    API --> AuthService: Error de autenticación
+    activate AuthService
+    
+    AuthService --> AuthContext: Error capturado
+    activate AuthContext
+    
+    AuthContext --> LoginForm: Mensaje de error
+    activate LoginForm
+    
+    LoginForm -> LoginForm: Mostrar error en UI
+    note left of LoginForm
+        - Credenciales inválidas
+        - Error de conexión
+        - Error del servidor
+    end note
+    
+    LoginForm --> Usuario: Mostrar mensaje de error
+    deactivate LoginForm
+    deactivate AuthContext
+    deactivate AuthService
+end
+
+@enduml

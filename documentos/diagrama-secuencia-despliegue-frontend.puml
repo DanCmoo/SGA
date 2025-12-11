@@ -1,0 +1,247 @@
+@startuml diagrama-secuencia-despliegue-frontend
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 10
+skinparam maxmessagesize 250
+skinparam sequenceParticipant underline
+
+title Diagrama de Secuencia: Despliegue del Frontend (Next.js)
+
+actor Desarrollador as dev
+participant "Terminal\n(PowerShell/Bash)" as terminal
+participant "pnpm\n(Package Manager)" as pnpm
+participant "Next.js CLI" as nextcli
+participant "Node.js Runtime" as nodejs
+participant "Webpack/Turbopack\n(Bundler)" as bundler
+participant "React" as react
+participant "Development Server" as devserver
+participant "Browser" as browser
+
+note over dev, browser
+    **Proceso de inicio del servidor de desarrollo frontend**
+    Tecnologías: Next.js 14, React 19, TypeScript, Tailwind CSS
+end note
+
+== Fase 1: Inicialización ==
+
+dev -> terminal : Ejecuta comando\n**pnpm dev**
+activate terminal
+
+terminal -> pnpm : Invoca pnpm con argumento "dev"
+activate pnpm
+
+pnpm -> pnpm : Lee **package.json**
+note right
+    {
+      "scripts": {
+        "dev": "next dev"
+      }
+    }
+end note
+
+pnpm -> pnpm : Verifica dependencias en **node_modules/**
+
+alt Dependencias faltantes
+    pnpm -> pnpm : Ejecuta instalación automática
+    note right
+        Descarga paquetes desde npm registry
+        - next@14.2.15
+        - react@19.0.0
+        - typescript@5.x
+        - tailwindcss@3.4.1
+    end note
+end
+
+pnpm -> nextcli : Ejecuta script "next dev"
+activate nextcli
+
+== Fase 2: Configuración de Next.js ==
+
+nextcli -> nodejs : Inicia Node.js Runtime
+activate nodejs
+
+nodejs -> nextcli : Runtime listo
+nextcli -> nextcli : Carga **next.config.mjs**
+note right
+    export default {
+      reactStrictMode: true,
+      images: {
+        domains: ['localhost']
+      }
+    }
+end note
+
+nextcli -> nextcli : Escanea directorio **app/**
+note right
+    Detecta estructura App Router:
+    - app/layout.tsx
+    - app/page.tsx
+    - app/login/page.tsx
+    - app/administrador/page.tsx
+    - etc.
+end note
+
+nextcli -> nextcli : Lee **tsconfig.json**
+note right
+    Configura compilador TypeScript
+    con paths y aliases
+end note
+
+== Fase 3: Compilación ==
+
+nextcli -> bundler : Inicia proceso de compilación
+activate bundler
+
+bundler -> bundler : Compila TypeScript → JavaScript
+note right
+    Transpila código con SWC compiler
+    (más rápido que Babel)
+end note
+
+bundler -> bundler : Procesa estilos Tailwind CSS
+note right
+    Lee tailwind.config.ts
+    Genera clases utility
+    Optimiza CSS final
+end note
+
+bundler -> bundler : Procesa componentes React
+note right
+    Transforma JSX a JavaScript
+    Crea árbol de componentes
+    Aplica optimizaciones
+end note
+
+bundler -> react : Inicializa React Runtime
+activate react
+react -> bundler : Runtime listo
+deactivate react
+
+bundler -> bundler : Genera **bundle** para desarrollo
+note right
+    Incluye:
+    - Source maps para debugging
+    - Hot Module Replacement (HMR)
+    - Error boundaries
+end note
+
+bundler -> nextcli : Compilación completada
+deactivate bundler
+
+== Fase 4: Inicio del Servidor ==
+
+nextcli -> devserver : Inicia Development Server
+activate devserver
+
+devserver -> devserver : Configura puerto 3000
+note right
+    Si puerto ocupado,
+    intenta 3001, 3002, etc.
+end note
+
+devserver -> devserver : Habilita **Hot Module Replacement (HMR)**
+note right
+    Permite actualización en caliente
+    sin perder estado de componentes
+end note
+
+devserver -> devserver : Configura middleware
+note right
+    - Middleware de autenticación
+    - Protección de rutas
+    - Redirecciones
+end note
+
+devserver -> devserver : Registra rutas del App Router
+note right
+    Rutas detectadas:
+    / (landing)
+    /login
+    /administrador
+    /coordinador
+    /profesor
+    /acudiente
+    /directivo
+end note
+
+devserver -> nextcli : Servidor listo en http://localhost:3000
+nextcli -> terminal : ✓ Ready in 2.5s
+terminal -> dev : Muestra mensaje de éxito
+deactivate nextcli
+deactivate pnpm
+deactivate terminal
+
+== Fase 5: Primera Petición ==
+
+dev -> browser : Abre http://localhost:3000
+activate browser
+
+browser -> devserver : GET /
+activate devserver
+
+devserver -> devserver : Server-Side Rendering (SSR)
+note right
+    1. Ejecuta page.tsx en servidor
+    2. Genera HTML inicial
+    3. Hidrata componentes React
+    4. Envía HTML + JS bundle
+end note
+
+devserver -> browser : HTML + JavaScript bundle
+browser -> browser : Hidratación React
+note right
+    React toma control del DOM
+    y convierte HTML estático
+    en aplicación interactiva
+end note
+
+browser -> dev : Muestra Landing Page
+deactivate browser
+deactivate devserver
+
+== Monitoreo Continuo (Hot Reload) ==
+
+group Hot Reload Activo
+    note over dev, devserver
+        El servidor monitorea cambios en archivos
+        y actualiza automáticamente el navegador
+    end note
+    
+    dev -> terminal : Guarda cambio en archivo
+    activate terminal
+    
+    terminal -> devserver : Detecta cambio mediante file watcher
+    activate devserver
+    
+    devserver -> bundler : Recompila módulo modificado
+    activate bundler
+    
+    bundler -> devserver : Módulo actualizado
+    deactivate bundler
+    
+    devserver -> browser : Envía actualización vía WebSocket
+    activate browser
+    
+    browser -> browser : **Fast Refresh**
+    note right
+        Actualiza componente sin
+        perder estado de React
+    end note
+    
+    browser -> dev : Muestra cambios instantáneamente
+    deactivate browser
+    deactivate devserver
+    deactivate terminal
+end
+
+note over dev, browser
+    **El servidor de desarrollo está listo y en ejecución**
+    - Puerto: 3000
+    - Hot Reload: Activo
+    - Source Maps: Habilitados
+    - Error Overlay: Activo
+end note
+
+@enduml

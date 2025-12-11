@@ -1,0 +1,249 @@
+@startuml diagrama-secuencia-crear-usuario
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam BoxPadding 10
+
+actor Administrador
+
+participant "page.tsx\n<<Administrador>>" as AdminPage
+participant "administrador.service.ts\n<<Services>>" as AdminService
+participant "api.ts\n<<HTTP Client>>" as API
+participant "AdministradorController\n<<Backend/Controller>>" as Controller
+participant "AdministradorServiceImpl\n<<Backend/Service>>" as ServiceImpl
+participant "PasswordEncoder\n<<Security>>" as PasswordEncoder
+database "UsuarioRepository\n<<Repository>>" as Repository
+participant "EmailService\n<<Service>>" as EmailService
+participant "JavaMailSender\n<<Mail>>" as MailSender
+
+Administrador -> AdminPage: Acceder al módulo\nde administrador
+activate AdminPage
+
+Administrador -> AdminPage: Llenar formulario\nde creación de usuario
+note right of AdminPage
+    Datos del formulario:
+    - Nombre y apellido
+    - Cédula
+    - Correo electrónico
+    - Fecha de nacimiento
+    - Rol
+end note
+
+Administrador -> AdminPage: Click "Crear Usuario"
+
+AdminPage -> AdminPage: validarFormulario()
+note right of AdminPage
+    Validaciones locales:
+    - Campos requeridos
+    - Formato de correo
+    - Formato de cédula
+end note
+
+AdminPage -> AdminService: generarContrasenaAleatoria()
+activate AdminService
+AdminService --> AdminPage: contrasena temporal
+deactivate AdminService
+
+group try [Región de creación exitosa de usuario]
+    AdminPage -> AdminService: crearUsuario(datosCreacion)
+    activate AdminService
+    note right of AdminService
+        Datos incluyen:
+        - Información del usuario
+        - Contraseña generada
+    end note
+    
+    AdminService -> API: POST /admin/usuarios
+    activate API
+    note right of API
+        Headers:
+        - Authorization: Bearer {token}
+        
+        Body:
+        - UsuarioCreacionDTO
+    end note
+    
+    API -> Controller: crearUsuario(@RequestBody)
+    activate Controller
+    note right of Controller
+        @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+        Verifica permisos
+    end note
+    
+    Controller -> ServiceImpl: crearUsuario(datos)
+    activate ServiceImpl
+    
+    ServiceImpl -> PasswordEncoder: encode(contrasenaGenerada)
+    activate PasswordEncoder
+    PasswordEncoder --> ServiceImpl: hash de contraseña
+    deactivate PasswordEncoder
+    
+    ServiceImpl -> ServiceImpl: Crear Token_Usuario
+    note right of ServiceImpl
+        Token_Usuario:
+        - contrasena (hash)
+        - rol
+    end note
+    
+    ServiceImpl -> ServiceImpl: Determinar tipo de usuario\nsegún rol
+    note right of ServiceImpl
+        Switch según rol:
+        - PROFESOR
+        - ACUDIENTE
+        - COORDINADOR
+        - DIRECTOR/DIRECTIVO
+        - ADMINISTRADOR
+    end note
+    
+    ServiceImpl -> Repository: save(usuario)
+    activate Repository
+    note right of Repository
+        Persistir en BD:
+        - Datos del usuario
+        - Token asociado
+        - Relaciones
+    end note
+    Repository --> ServiceImpl: Usuario guardado
+    deactivate Repository
+    
+    ServiceImpl -> ServiceImpl: construirNombreCompleto(datos)
+    
+    ServiceImpl -> EmailService: enviarCredencialesNuevoUsuario()
+    activate EmailService
+    note right of EmailService
+        @Async - Proceso asíncrono
+        Parámetros:
+        - destinatario
+        - nombreCompleto
+        - correoUsuario
+        - contrasena
+        - rol
+    end note
+    
+    EmailService -> EmailService: construirEmailBienvenida()
+    note right of EmailService
+        Construir HTML del email:
+        - Datos del usuario
+        - Credenciales de acceso
+        - URL del sistema
+        - Instrucciones
+    end note
+    
+    EmailService -> MailSender: send(MimeMessage)
+    activate MailSender
+    note right of MailSender
+        Envío del correo
+        con credenciales
+    end note
+    MailSender --> EmailService: Email enviado
+    deactivate MailSender
+    deactivate EmailService
+    
+    note right of ServiceImpl
+        Si falla el envío de email,
+        se captura pero no se
+        revierte la transacción
+    end note
+    
+    ServiceImpl -> ServiceImpl: convertirAUsuarioDTO(usuario)
+    
+    ServiceImpl --> Controller: UsuarioDTO
+    deactivate ServiceImpl
+    
+    Controller --> API: ResponseEntity<UsuarioDTO>\n(201 CREATED)
+    deactivate Controller
+    
+    API --> AdminService: Usuario creado
+    deactivate API
+    
+    AdminService --> AdminPage: Usuario
+    deactivate AdminService
+    
+    AdminPage -> AdminPage: Actualizar lista local\nde usuarios
+    
+    AdminPage -> AdminPage: Limpiar formulario
+    
+    AdminPage --> Administrador: Mostrar toast de éxito\n+ contraseña generada
+    note left of Administrador
+        "Usuario [nombre] creado exitosamente"
+        Contraseña temporal mostrada
+        en pantalla para el administrador
+    end note
+    
+    deactivate AdminPage
+end
+
+group catch [Región de manejo de errores]
+    MailSender --> EmailService: Error al enviar email
+    activate EmailService
+    
+    EmailService -> EmailService: log.error()
+    note right of EmailService
+        Captura excepciones:
+        - MessagingException
+        - UnsupportedOperationException
+        - IllegalArgumentException
+        
+        No lanza excepción
+        (usuario ya creado)
+    end note
+    deactivate EmailService
+    
+    alt Error de validación o permisos
+        Controller --> API: ResponseEntity (400/403)
+        activate API
+        
+        API -> API: Convertir a ApiException
+        API --> AdminService: throw ApiException
+        activate AdminService
+        
+        AdminService --> AdminPage: Error capturado
+        activate AdminPage
+        
+        AdminPage -> AdminPage: Mostrar mensaje\nde error en UI
+        note left of AdminPage
+            Posibles errores:
+            - "Rol no válido"
+            - "Usuario ya existe"
+            - "Permisos insuficientes"
+            - "Error de conexión"
+        end note
+        
+        AdminPage --> Administrador: Toast con mensaje de error
+        deactivate AdminPage
+        deactivate AdminService
+        deactivate API
+    end
+    
+    alt Error en base de datos
+        Repository --> ServiceImpl: Exception
+        activate ServiceImpl
+        
+        ServiceImpl -> ServiceImpl: log.error()
+        ServiceImpl --> Controller: RuntimeException
+        activate Controller
+        
+        Controller --> API: ResponseEntity (500)
+        activate API
+        
+        API --> AdminService: Error de servidor
+        activate AdminService
+        
+        AdminService --> AdminPage: Error capturado
+        activate AdminPage
+        
+        AdminPage --> Administrador: "Error al crear el usuario"
+        deactivate AdminPage
+        deactivate AdminService
+        deactivate API
+        deactivate Controller
+        deactivate ServiceImpl
+    end
+    
+    AdminPage -> AdminPage: setCargando(false)
+    note right of AdminPage
+        Finally: Restaurar estado
+        de la interfaz
+    end note
+end
+
+@enduml

@@ -1,0 +1,180 @@
+@startuml diagrama-secuencia-arranque-backend
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam BoxPadding 10
+
+actor Desarrollador
+participant "Maven" as Maven
+participant "SgaBackendApplication\n<<Main Class>>" as Main
+participant "Spring Boot\nFramework" as Spring
+box "Infraestructura" #LightBlue
+    database "PostgreSQL" as DB
+    participant "Hibernate/JPA" as JPA
+end box
+box "Clases del Proyecto" #LightGreen
+    participant "SecurityConfig\n<<@Configuration>>" as SecConfig
+    participant "UsuarioRepository\n<<@Repository>>" as RepoUser
+    participant "UsuarioService\n<<@Service>>" as ServiceUser
+    participant "UsuarioController\n<<@RestController>>" as ControllerUser
+end box
+participant "Tomcat:8080" as Tomcat
+
+== Fase 1: Compilación y Ejecución ==
+
+Desarrollador -> Maven: mvn spring-boot:run
+activate Maven
+
+Maven -> Maven: Compilar código fuente
+note right: Genera .class en target/
+
+Maven -> Main: Ejecutar main(String[] args)
+activate Main
+
+Main -> Spring: SpringApplication.run()
+activate Spring
+note right of Spring
+    Framework Spring Boot
+    inicia proceso de arranque
+end note
+
+== Fase 2: Configuración de Infraestructura ==
+
+Spring -> DB: Conectar con PostgreSQL
+activate DB
+note right of DB
+    Carga application.yml:
+    - URL: localhost:5432/sga
+    - Usuario: postgres
+    - Pool: HikariCP (10 conexiones)
+end note
+DB --> Spring: Conexión establecida
+deactivate DB
+
+Spring -> JPA: Inicializar Hibernate
+activate JPA
+JPA -> DB: Validar esquema de BD
+activate DB
+note right of JPA
+    Valida tablas:
+    - usuario, token_usuario
+    - estudiante, grupo
+    - logro, evaluacion
+    - boletin, etc.
+end note
+DB --> JPA: Esquema validado
+deactivate DB
+JPA --> Spring: ORM listo
+deactivate JPA
+
+== Fase 3: Instanciación de Clases del Proyecto ==
+
+Spring -> Spring: Escanear paquete com.sga.backend
+note right of Spring
+    Busca anotaciones:
+    @Configuration, @Repository
+    @Service, @RestController
+end note
+
+Spring -> SecConfig: new SecurityConfig()
+activate SecConfig
+note right of SecConfig
+    Configura:
+    - Filtro JWT
+    - BCrypt (strength 12)
+    - CORS para localhost:3000
+    - Rutas públicas/protegidas
+end note
+SecConfig --> Spring: Bean creado ✓
+deactivate SecConfig
+
+Spring -> RepoUser: Crear UsuarioRepository
+activate RepoUser
+note right of RepoUser
+    @Repository
+    extends JpaRepository<Usuario, UUID>
+    
+    Spring Data genera proxy
+    con métodos CRUD:
+    - save()
+    - findById()
+    - findByCorreoElectronico()
+end note
+RepoUser --> Spring: Bean UsuarioRepository ✓
+deactivate RepoUser
+
+Spring -> ServiceUser: new UsuarioService(usuarioRepository)
+activate ServiceUser
+note right of ServiceUser
+    @Service
+    
+    Constructor inyecta:
+    @Autowired UsuarioRepository
+    @Autowired PasswordEncoder
+    @Autowired JwtService
+    
+    Métodos de negocio:
+    - login(correo, password)
+    - obtenerPerfil(id)
+end note
+ServiceUser --> Spring: Bean UsuarioService ✓
+deactivate ServiceUser
+
+Spring -> ControllerUser: new UsuarioController(usuarioService)
+activate ControllerUser
+note right of ControllerUser
+    @RestController
+    @RequestMapping("/api/usuarios")
+    
+    Constructor inyecta:
+    @Autowired UsuarioService
+    
+    Endpoints REST:
+    POST /login
+    GET /perfil
+end note
+ControllerUser --> Spring: Bean UsuarioController ✓
+deactivate ControllerUser
+
+note over Spring
+    **Mismo proceso para otros módulos:**
+    
+    EstudianteRepository → EstudianteService → EstudianteController
+    LogroRepository → LogroService → LogroController
+    BoletinRepository → BoletinService → BoletinController
+    
+    Total: 10 Repositories, 8 Services, 8 Controllers
+end note
+
+== Fase 4: Inicio del Servidor ==
+
+Spring -> Tomcat: Iniciar servidor embebido
+activate Tomcat
+note right of Tomcat
+    Puerto: 8080
+    Contexto: /api
+    
+    Registra todos los
+    endpoints REST
+end note
+Tomcat --> Spring: Servidor listo ✓
+deactivate Tomcat
+
+Spring --> Main: ApplicationContext listo
+deactivate Spring
+
+Main --> Maven: Aplicación iniciada
+deactivate Main
+
+Maven --> Desarrollador: ✓ Started SgaBackendApplication in 3.2s
+deactivate Maven
+
+note over Desarrollador, Tomcat
+    **Backend listo en http://localhost:8080/api**
+    
+    24 endpoints REST disponibles
+    10 Repositories instanciados
+    8 Services instanciados
+    8 Controllers instanciados
+end note
+
+@enduml

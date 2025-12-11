@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ChevronDown, ChevronRight, Users, ArrowLeft, Loader2 } from "lucide-react"
+import { ChevronDown, ChevronRight, Users, ArrowLeft, Loader2, BarChart3, TrendingUp, UserCheck, GraduationCap } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -14,11 +14,26 @@ interface GradeWithGroups {
   grupos: GrupoDTO[]
 }
 
+interface Estadisticas {
+  totalEstudiantes: number
+  totalGrupos: number
+  totalGrados: number
+  promedioEstudiantesPorGrupo: number
+  gruposSinProfesor: number
+}
+
 export default function DirectivoPage() {
   const router = useRouter()
   const { logout } = useAuth()
   const [expandedGrades, setExpandedGrades] = useState<string[]>([])
   const [gradesWithGroups, setGradesWithGroups] = useState<GradeWithGroups[]>([])
+  const [estadisticas, setEstadisticas] = useState<Estadisticas>({
+    totalEstudiantes: 0,
+    totalGrupos: 0,
+    totalGrados: 0,
+    promedioEstudiantesPorGrupo: 0,
+    gruposSinProfesor: 0
+  })
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
 
@@ -40,6 +55,23 @@ export default function DirectivoPage() {
       )
       
       setGradesWithGroups(gradesData)
+      
+      // Calcular estadísticas
+      const totalGrupos = gradesData.reduce((acc, { grupos }) => acc + grupos.length, 0)
+      const totalEstudiantes = gradesData.reduce((acc, { grupos }) => 
+        acc + grupos.reduce((sum, grupo) => sum + grupo.cantidadEstudiantes, 0), 0
+      )
+      const gruposSinProfesor = gradesData.reduce((acc, { grupos }) => 
+        acc + grupos.filter(g => !g.idProfesor).length, 0
+      )
+      
+      setEstadisticas({
+        totalEstudiantes,
+        totalGrupos,
+        totalGrados: grados.length,
+        promedioEstudiantesPorGrupo: totalGrupos > 0 ? Math.round(totalEstudiantes / totalGrupos) : 0,
+        gruposSinProfesor
+      })
     } catch (error) {
       console.error('Error al cargar datos:', error)
       setToast({ message: "Error al cargar los grados y grupos", type: "error" })
@@ -76,7 +108,66 @@ export default function DirectivoPage() {
         </div>
 
         <div className="rounded-3xl bg-white/95 backdrop-blur-sm p-12 shadow-[0_20px_60px_-15px_rgba(37,52,64,0.3)] border border-beige-300/50">
-          <h1 className="mb-12 text-center text-4xl font-bold text-navy-800 tracking-tight">GRADOS Y GRUPOS</h1>
+          <h1 className="mb-8 text-center text-4xl font-bold text-navy-800 tracking-tight">Panel de Gestión Académica</h1>
+          
+          {/* Dashboard de Estadísticas */}
+          {!loading && (
+            <div className="mb-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Total Estudiantes */}
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                    <Users className="h-8 w-8 text-white" />
+                  </div>
+                  <TrendingUp className="h-6 w-6 text-white/60" />
+                </div>
+                <h3 className="text-white/80 text-sm font-medium mb-1">Total Estudiantes</h3>
+                <p className="text-4xl font-bold text-white">{estadisticas.totalEstudiantes}</p>
+              </div>
+
+              {/* Total Grupos */}
+              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                    <UserCheck className="h-8 w-8 text-white" />
+                  </div>
+                  <BarChart3 className="h-6 w-6 text-white/60" />
+                </div>
+                <h3 className="text-white/80 text-sm font-medium mb-1">Grupos Activos</h3>
+                <p className="text-4xl font-bold text-white">{estadisticas.totalGrupos}</p>
+              </div>
+
+              {/* Promedio Estudiantes */}
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                    <GraduationCap className="h-8 w-8 text-white" />
+                  </div>
+                  <BarChart3 className="h-6 w-6 text-white/60" />
+                </div>
+                <h3 className="text-white/80 text-sm font-medium mb-1">Promedio por Grupo</h3>
+                <p className="text-4xl font-bold text-white">{estadisticas.promedioEstudiantesPorGrupo}</p>
+              </div>
+
+              {/* Grupos sin Profesor */}
+              <div className={`bg-gradient-to-br ${estadisticas.gruposSinProfesor > 0 ? 'from-red-500 to-red-600' : 'from-gray-500 to-gray-600'} rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                    <Users className="h-8 w-8 text-white" />
+                  </div>
+                  {estadisticas.gruposSinProfesor > 0 && (
+                    <span className="px-2 py-1 bg-white/30 rounded-lg text-xs font-bold text-white">
+                      ⚠️ Atención
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-white/80 text-sm font-medium mb-1">Sin Profesor</h3>
+                <p className="text-4xl font-bold text-white">{estadisticas.gruposSinProfesor}</p>
+              </div>
+            </div>
+          )}
+
+          <h2 className="mb-6 text-2xl font-bold text-navy-800 tracking-tight">Grados y Grupos</h2>
 
           {loading ? (
             <div className="flex justify-center items-center py-20">
